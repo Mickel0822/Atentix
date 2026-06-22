@@ -1,0 +1,62 @@
+--- Page 1 ---
+Especificaci´ on T´ ecnica: Monitoreo de
+Atenci´ on de Pr´ oxima Generaci´ on
+Arquitectura H´ ıbrida MediaPipe + L2CS-Net
+Reporte de Investigaci´ on y Gu´ ıa de Implementaci´ on
+27 de enero de 2026
+Introducci´ on
+El monitoreo de la atenci´ on estudiantil en entornos virtuales requiere una precisi´ on que
+supere la simple detecci´ on de presencia. La limitaci´ on principal de los sistemas actuales
+es la incapacidad de detectar el desv´ ıo de la mirada (gaze) cuando la cabeza permane-
+ce est´ atica. Esta especificaci´ on propone una soluci´ on basada en modelos de apariencia,
+integrando estimaci´ on de pose 6-DoF y vectores de mirada tridimensionales.
+Fundamentos Matem´ aticos
+2.1. Estimaci´ on de Pose de la Cabeza (HPE)
+Para determinar la orientaci´ on de la cabeza, se utiliza el algoritmoPerspective-n-
+Point (PnP), que resuelve la relaci´ on entre puntos 3D de un modelo facial gen´ erico y
+sus proyecciones 2D en la imagen:
+s
+u
+v
+1
+=A
+R|t
+Xw
+Yw
+Zw
+1
+(1)
+Donde:
+Aes la matriz intr´ ınseca de la c´ amara.
+Res la matriz de rotaci´ on, de la cual se extraen los ´ angulos deYaw(γ),Pitch(ρ)
+yRoll(ϕ).
+Umbrales cr´ ıticos de distracci´ on:|γ|>25◦o|ρ|>15◦.
+1
+
+--- Page 2 ---
+2.2. Mirada Basada en Apariencia (L2CS-Net)
+A diferencia de los m´ etodos geom´ etricos, L2CS-Net utiliza una CNN para predecir los
+´ angulos de la mirada directamente desde la imagen (Appearance-based gaze estimation).
+Los ´ angulos de salida son:
+Gaze Pitch (α): Movimiento vertical del ojo.
+Gaze Yaw (β): Movimiento horizontal del ojo (ideal para detectar desv´ ıos laterales
+sin mover la cabeza).
+2.3. Detecci´ on de Parpadeo (EAR)
+ElEye Aspect Ratiopermite cuantificar la apertura palpebral:
+EAR=∥p2−p 6∥+∥p 3−p 5∥
+2∥p 1−p 4∥(2)
+Un estado de distracci´ on o fatiga se detecta cuando el promedio deEAR <0,25 por un
+tiempo prolongado.
+Arquitectura del Sistema Propuesto
+Componente Tecnolog´ ıa Responsabilidad
+Frontend Next.js / MediaPipe Landmark detection (468 pts) y UI.
+Backend FastAPI / PyTorch Inferencia de L2CS-Net y SolvePnP.
+Comunicaci´ on WebSockets Streaming de frames a 15-20 FPS.
+Filtrado Filtro de Kalman Suavizado de jitter en mirada y pose.
+Cuadro 1: Distribuci´ on de la l´ ogica del sistema.
+´Indice de Compromiso (Engagement Index)
+Se define el ´ ındiceEIcomo una funci´ on ponderada de los estados detectados:
+EI(t) =w g·GazeScore(t) +w p·PoseScore(t) +w b·BlinkScore(t) (3)
+Pesos sugeridos:w g= 0,5, w p= 0,3, w b= 0,2.
+2
+

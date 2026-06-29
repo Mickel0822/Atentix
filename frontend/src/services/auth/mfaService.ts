@@ -277,6 +277,7 @@ export class MFAService {
   static async challengeAndVerify(factorId: string, code: string) {
     const supabase = createClientSupabase();
 
+    // El login puede requerir un challenge previo antes de validar el código.
     const { data, error } = await supabase.auth.mfa.challengeAndVerify({
       factorId,
       code: code.toString().trim(),

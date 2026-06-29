@@ -17,6 +17,7 @@ class RegisterRequest(BaseModel):
 
 class LoginRequest(BaseModel):
     """Request para login de usuario"""
+    # Contrato mínimo que consume el flujo de acceso desde el frontend.
     email: str
     password: str
 
@@ -38,6 +39,7 @@ class RegisterResponse(BaseModel):
 
 class LoginResponse(BaseModel):
     """Respuesta del endpoint de login"""
+    # Respuesta estándar para completar el intercambio de autenticación.
     access_token: str
     token_type: str
 

@@ -45,6 +45,7 @@ async def get_classes(current_user: any = Depends(get_current_user)):
     """
     try:
         user_id = current_user.id
+        # US-04: Control de acceso por rol - Obtener rol de app_metadata (1: Admin, 2: Profesor, 3: Estudiante)
         role_raw = current_user.app_metadata.get("role", 3)
         try:
             role = int(role_raw)
@@ -53,15 +54,16 @@ async def get_classes(current_user: any = Depends(get_current_user)):
 
         classes_data = []
 
-        if role == 1: # Admin
+        # US-04: Filtro de visibilidad según rol de usuario
+        if role == 1: # Admin - Tiene visibilidad completa del catálogo de clases activas
             response = supabase.table("classes").select("*").eq("ctr_esatdo", 1).execute()
             classes_data = response.data
         
-        elif role == 2: # Profesor
+        elif role == 2: # Profesor - Solo puede ver y gestionar las clases que ha creado
             response = supabase.table("classes").select("*").eq("professor_id", user_id).eq("ctr_esatdo", 1).execute()
             classes_data = response.data
             
-        else: # Estudiante
+        else: # Estudiante - Solo puede ver las clases en las que está inscrito
             enrollments = supabase.table("class_enrollments").select("class_id").eq("student_id", user_id).eq("estado", 1).execute()
             class_ids = [e['class_id'] for e in enrollments.data]
             if class_ids:

@@ -15,10 +15,9 @@ def get_current_user_token(credentials: HTTPAuthorizationCredentials = Depends(s
 
 async def get_current_user(token: str = Depends(get_current_user_token)):
     """
-    Valida el token JWT de Supabase y devuelve el payload del usuario.
-    NOTA: En un entorno de producción estricto, deberíamos validar la firma con la clave pública de Supabase.
-    Para este MVP, decodificamos el JWT y confiamos en el endpoint de Supabase (o usamos el secreto si lo tenemos).
-    Dado que usamos el `SUPABASE_KEY` (service role o anon), podríamos usar `supabase.auth.get_user(token)`.
+    US-04: Control de acceso por rol - Valida el token JWT de Supabase para obtener el payload del usuario autenticado.
+    El rol del usuario se encuentra embebido en `app_metadata.role` dentro de este payload, lo cual 
+    permite a los endpoints realizar control de acceso basado en roles (RBAC).
     """
     try:
         # Opción 1: Validar decodificando (más rápido, requiere que SUPABASE_JWT_SECRET esté configurado si verificamos firma)

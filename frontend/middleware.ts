@@ -62,19 +62,20 @@ export async function middleware(req: NextRequest) {
     // Si falla la comprobación AAL, seguir (evitar bloquear al usuario)
   }
 
+  // US-04: Control de acceso por rol (RBAC) - Recuperar el rol del usuario autenticado
   const role = session.user.app_metadata?.role as number | undefined;
 
-  // 🔒 SOLO ADMIN (rol 1) - Solo puede acceder a /admin
+  // US-04: 🔒 SOLO ADMIN (rol 1) - Restringir el acceso a rutas administrativas
   if (pathname.startsWith("/admin") && role !== 1) {
     return NextResponse.redirect(new URL("/403", req.url));
   }
 
-  // 🔒 SOLO PROFESOR (rol 2) - Solo puede acceder a /profesor
+  // US-04: 🔒 SOLO PROFESOR (rol 2) - Restringir el acceso a rutas del cuerpo docente
   if (pathname.startsWith("/profesor") && role !== 2) {
     return NextResponse.redirect(new URL("/403", req.url));
   }
 
-  // 🔒 SOLO ESTUDIANTE (rol 3) - Solo puede acceder a /estudiante
+  // US-04: 🔒 SOLO ESTUDIANTE (rol 3) - Restringir el acceso a la zona de estudiantes
   if (pathname.startsWith("/estudiante") && role !== 3) {
     return NextResponse.redirect(new URL("/403", req.url));
   }

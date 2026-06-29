@@ -46,7 +46,7 @@ export default function RegistroPage() {
     setIsLoading(true);
 
     try {
-      // Convertir role de string a número: student = 2, professor = 3
+      // La API espera el rol numérico definido por el backend.
       let roleNumber: number;
       if (role === "student") {
         roleNumber = 3;
@@ -69,7 +69,7 @@ export default function RegistroPage() {
       setAlertType("success");
       setIsAlertOpen(true);
 
-      // Registro exitoso, redirigir al login después de un breve delay
+      // Tras registrar, se envía al login para continuar el flujo.
       setTimeout(() => {
         router.push("/login");
       }, 2000);

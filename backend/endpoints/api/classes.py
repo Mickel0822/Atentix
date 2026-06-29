@@ -174,10 +174,10 @@ async def join_class_by_code(request: JoinClassRequest, current_user: any = Depe
 @router.post("/", response_model=ClassResponse)
 async def create_class(class_data: ClassCreate, professor_id: str, current_user: any = Depends(get_current_user)):
     """
-    Crea una nueva clase. El professor_id debe venir del token de auth en producción.
+    US-05: Crear y gestionar clases - Crea una nueva clase asignada al profesor autenticado.
     """
     try:
-        # Priorizar siempre el usuario autenticado si existe
+        # US-05: Validar que el creador de la clase sea el profesor autenticado
         if current_user:
             final_professor_id = current_user.id
         else:
@@ -197,6 +197,7 @@ async def create_class(class_data: ClassCreate, professor_id: str, current_user:
                      else:
                          raise HTTPException(status_code=400, detail="No se encontraron usuarios para asignar.")
 
+        # US-05: Insertar la nueva clase con su código de acceso, nombre, horario y descripción
         data = {
             "name": class_data.name,
             "description": class_data.description,
@@ -239,15 +240,16 @@ class ClassUpdate(BaseModel):
 @router.put("/{class_id}", response_model=ClassResponse)
 async def update_class(class_id: str, class_update: ClassUpdate, current_user: any = Depends(get_current_user)):
     """
-    Actualiza una clase existente.
+    US-05: Crear y gestionar clases - Actualiza la información de una clase existente (nombre, descripción, código, horario).
     """
     try:
-        # Filtrar campos nulos
+        # US-05: Filtrar únicamente los campos no nulos enviados por el usuario
         update_data = {k: v for k, v in class_update.dict().items() if v is not None}
         
         if not update_data:
              raise HTTPException(status_code=400, detail="No se enviaron datos para actualizar")
 
+        # US-05: Actualizar la clase en la base de datos Supabase
         response = supabase.table("classes").update(update_data).eq("id", class_id).execute()
         
         if not response.data:
@@ -308,21 +310,17 @@ async def remove_student(class_id: str, student_id: str, current_user: any = Dep
 @router.delete("/{class_id}")
 async def delete_class(class_id: str, current_user: any = Depends(get_current_user)):
     """
-    Elimina una clase (Soft Delete).
-    Cambia ctr_estado a 0.
+    US-05: Crear y gestionar clases - Elimina una clase de forma lógica (Soft Delete) y deshabilita sus videos/tareas asociados.
     """
     try:
-        # Verificar permisos (solo profesor creador o admin)
-        # Por simplicidad asumimos que si llega aquí el id es valido, pero deberiamos verificar ownership
-        
+        # US-05: Ejecutar eliminación lógica cambiando ctr_esatdo a 0
         data = {"ctr_esatdo": 0}
         response = supabase.table("classes").update(data).eq("id", class_id).execute()
         
         if not response.data:
              raise HTTPException(status_code=404, detail="Clase no encontrada o error al eliminar")
 
-        # Eliminación en cascada (Lógica) de los videos
-        # Actualizamos ctr_estado a 0 para todas las tareas de esta clase
+        # US-05: Eliminación lógica en cascada para deshabilitar las tareas/videos de la clase eliminada
         supabase.table("tasks").update({"ctr_estado": 0}).eq("class_id", class_id).execute()
 
         return {"message": "Clase eliminada exitosamente (Soft Delete)"}

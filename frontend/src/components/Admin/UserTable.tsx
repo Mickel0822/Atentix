@@ -38,12 +38,15 @@ export default function UserTable({
   onResetPassword,
   onDelete,
 }: UserTableProps) {
+  // Componente de tabla para renderizar el listado de usuarios de manera organizada.
+  // Proporciona selección por filas, paginación, insignias visuales para roles/estados y disparadores de acciones.
   const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
 
   const totalPages = Math.ceil(totalItems / pageSize);
   const startRange = (currentPage - 1) * pageSize + 1;
   const endRange = Math.min(currentPage * pageSize, totalItems);
 
+  // Alterna la selección de todos los usuarios actualmente visibles en la página.
   const toggleSelectAll = () => {
     if (selectedUsers.size === users.length) {
       setSelectedUsers(new Set());
@@ -52,6 +55,7 @@ export default function UserTable({
     }
   };
 
+  // Selecciona o deselecciona de manera individual a un usuario de la lista.
   const toggleSelectUser = (userId: string) => {
     const newSelected = new Set(selectedUsers);
     if (newSelected.has(userId)) {
@@ -62,6 +66,7 @@ export default function UserTable({
     setSelectedUsers(newSelected);
   };
 
+  // Genera y retorna una insignia estilizada (badge) y un icono acorde al rol del usuario.
   const getRoleBadge = (role: User["role"]) => {
     const styles = {
       Estudiante: "bg-blue-50 text-blue-700 border-blue-100",
@@ -87,6 +92,7 @@ export default function UserTable({
     );
   };
 
+  // Genera y retorna una insignia estilizada (badge) con un punto indicador del estado del usuario.
   const getStatusBadge = (status: User["status"]) => {
     const styles = {
       Activo: "bg-green-50 text-green-700",

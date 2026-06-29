@@ -26,6 +26,8 @@ interface User {
 
 
 export default function UsuariosPage() {
+  // Componente de página principal para la gestión de usuarios administrativos.
+  // Permite listar, filtrar, crear, editar, eliminar, restablecer contraseña y exportar usuarios.
   const [users, setUsers] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("Todos");
@@ -45,6 +47,8 @@ export default function UsuariosPage() {
 
   // Fetch users from API
   useEffect(() => {
+    // Función asíncrona para obtener y actualizar la lista de usuarios desde la API.
+    // Aplica los filtros de búsqueda, rol y estado actuales, además de paginación.
     const fetchUsers = async () => {
       try {
         const skip = (currentPage - 1) * pageSize;
@@ -74,26 +78,33 @@ export default function UsuariosPage() {
     setCurrentPage(1);
   }, [searchTerm, roleFilter, statusFilter]);
 
+  // Manejador para visualizar los detalles completos de un usuario seleccionado.
   const handleViewDetails = (user: User) => {
     setSelectedUser(user);
     setIsDetailsModalOpen(true);
   };
 
+  // Manejador para abrir el formulario de edición de un usuario seleccionado.
   const handleEdit = (user: User) => {
     setSelectedUser(user);
     setIsEditModalOpen(true);
   };
 
+  // Manejador para abrir el modal de confirmación de eliminación de un usuario.
   const handleDelete = (user: User) => {
     setSelectedUser(user);
     setIsDeleteModalOpen(true);
   };
 
+  // Manejador para abrir el modal de restablecimiento de contraseña de un usuario.
   const handleResetPassword = (user: User) => {
     setSelectedUser(user);
     setIsResetPasswordModalOpen(true);
   };
 
+  // Guarda la información de un usuario.
+  // Si ya existía un usuario seleccionado, actualiza sus datos mediante PUT.
+  // Si no, crea un nuevo usuario mediante POST. Finalmente refresca la lista.
   const handleSaveUser = async (userData: Partial<User>) => {
     if (selectedUser) {
       // Editar usuario existente
@@ -140,6 +151,8 @@ export default function UsuariosPage() {
     setSelectedUser(null);
   };
 
+  // Realiza la petición DELETE para eliminar lógicamente al usuario seleccionado
+  // y actualiza el estado local de la lista para reflejar la eliminación inmediatamente.
   const handleDeleteUser = async () => {
     if (selectedUser) {
       try {
@@ -154,11 +167,14 @@ export default function UsuariosPage() {
     }
   };
 
+  // Lógica para enviar la solicitud de restablecimiento de contraseña del usuario seleccionado.
   const handleResetPasswordConfirm = (password?: string) => {
     // TODO: Implementar lógica de restablecimiento de contraseña
     console.log("Restablecer contraseña para:", selectedUser?.email, password);
   };
 
+  // Realiza una petición GET al endpoint de exportación con los filtros actuales
+  // para descargar un archivo Excel con el listado de usuarios.
   const handleExportExcel = async () => {
     try {
       const params: any = {};

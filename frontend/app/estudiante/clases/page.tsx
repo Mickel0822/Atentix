@@ -35,10 +35,11 @@ export default function MisClasesPage() {
     e.preventDefault();
     setError("");
     try {
+      // US-06: Unirse a clase por código - Enviar código ingresado por el estudiante para inscripción activa
       await api.post('/classes/join', { code: accessCode });
       setIsJoinModalOpen(false);
       setAccessCode("");
-      // Recargar clases
+      // US-06: Recargar listado de clases del estudiante tras inscripción exitosa
       fetchClasses();
     } catch (err: any) {
       const msg = err.response?.data?.detail || "Error al unirse a la clase";

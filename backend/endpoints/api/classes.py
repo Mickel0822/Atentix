@@ -133,11 +133,10 @@ async def get_classes(current_user: any = Depends(get_current_user)):
 @router.post("/join")
 async def join_class_by_code(request: JoinClassRequest, current_user: any = Depends(get_current_user)):
     """
-    Permite a un estudiante unirse a una clase usando su código.
+    US-06: Unirse a clase por código - Inscribe a un estudiante en una clase utilizando su código de acceso único.
     """
     try:
-        # 1. Buscar la clase por código
-        # Nota: Asumimos que la columna se llama 'code' en la tabla 'classes'
+        # US-06: 1. Buscar la clase por código único en la tabla 'classes'
         class_res = supabase.table("classes").select("id").eq("code", request.code).execute()
         
         if not class_res.data:
@@ -146,7 +145,7 @@ async def join_class_by_code(request: JoinClassRequest, current_user: any = Depe
         class_id = class_res.data[0]['id']
         student_id = current_user.id
         
-        # 2. Verificar si ya está inscrito
+        # US-06: 2. Verificar si el estudiante ya cuenta con un registro de inscripción previo
         check = supabase.table("class_enrollments").select("*").eq("class_id", class_id).eq("student_id", student_id).execute()
         if check.data:
              existing = check.data[0]
@@ -154,11 +153,11 @@ async def join_class_by_code(request: JoinClassRequest, current_user: any = Depe
              if existing.get('estado') == 1:
                  raise HTTPException(status_code=400, detail="Ya estás inscrito en esta clase")
              else:
-                 # Reactivar
+                 # US-06: Reactivar inscripción de estudiante previamente desmatriculado
                  supabase.table("class_enrollments").update({"estado": 1}).eq("class_id", class_id).eq("student_id", student_id).execute()
                  return {"message": "Inscripción reactivada exitosamente", "class_id": class_id}
 
-        # 3. Inscribir (Nuevo registro)
+        # US-06: 3. Inscribir (Nuevo registro de vinculación estudiante-clase)
         data = {"class_id": class_id, "student_id": student_id, "estado": 1}
         response = supabase.table("class_enrollments").insert(data).execute()
         

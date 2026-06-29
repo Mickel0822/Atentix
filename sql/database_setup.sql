@@ -108,17 +108,17 @@ create table if not exists generated_quizzes (
 );
 
 -- =============================================================================
--- POLÍTICAS DE SEGURIDAD (RLS) - "Lo que pediste sobre ver solo lo suyo"
+-- POLÍTICAS DE SEGURIDAD (RLS) - US-04 Control de acceso por rol (Base de Datos)
 -- =============================================================================
 
--- Habilitar RLS en todas las tablas nuevas
+-- US-04: Habilitar Row Level Security (RLS) en todas las tablas transaccionales y de clases
 alter table classes enable row level security;
 alter table class_enrollments enable row level security;
 alter table tasks enable row level security;
 alter table activity_sessions enable row level security;
 alter table generated_quizzes enable row level security;
 
--- --- POLÍTICAS PARA CLASES ---
+-- --- POLÍTICAS PARA CLASES (US-04: Control por Rol en Clases) ---
 -- Eliminar políticas existentes si existen (para permitir re-ejecutar el script)
 DROP POLICY IF EXISTS "Profesores ven todo (o solo suyas)" ON classes;
 DROP POLICY IF EXISTS "Estudiantes ven sus clases" ON classes;

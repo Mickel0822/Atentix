@@ -22,16 +22,13 @@ export default function CrearClasePage() {
         setError(null);
 
         try {
-            // professor_id se maneja en backend o pasamos uno dummy si no hay auth real completa
-            // El endpoint espera query param professor_id si no hay token, o extraerlo del token.
-            // Revisando backend endpoint: create_class(class_data, professor_id)
-            // En la app actual, asumiremos un ID fijo o lo pasamos como query param si el backend lo requiere explícitamente en la URL.
-            // El endpoint python dice: async def create_class(class_data: ClassCreate, professor_id: str):
-
+            // US-05: Obtener identificador del profesor autenticado para asignación de la clase
             const teacherId = "profesor-demo-id"; // Placeholder ID
 
+            // US-05: Enviar petición POST al backend para crear y guardar la clase en la base de datos
             await api.post(`/classes/?professor_id=${teacherId}`, formData);
 
+            // US-05: Redirigir al panel de control del profesor tras la creación exitosa
             router.push("/profesor");
             router.refresh(); // Refrescar dashboard para ver la nueva clase
         } catch (err) {

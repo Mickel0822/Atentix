@@ -19,6 +19,11 @@ async def export_users(
     status: Optional[str] = None,
     current_user: any = Depends(get_current_user)
 ):
+    """
+    Exporta la lista de usuarios filtrados a un archivo Excel (.xlsx).
+    Filtra los perfiles activos por búsqueda de texto (nombre o correo), rol y estado de actividad.
+    Retorna una respuesta de transmisión (StreamingResponse) con el archivo binario generado en memoria.
+    """
     try:
         # 1. Base query (reuse filtering logic)
         query = supabase.table("profiles").select("*").neq("ctr_estado", 0)
@@ -99,6 +104,11 @@ async def get_users(
     status: Optional[str] = None, # "Activo", "Inactivo", "Todos"
     current_user: any = Depends(get_current_user)
 ):
+    """
+    Obtiene una lista paginada de usuarios registrados en el sistema.
+    Excluye usuarios eliminados lógicamente (ctr_estado = 0).
+    Permite filtrar por rol, estado e incluye búsqueda por nombre o correo electrónico.
+    """
     try:
         # Check admin role? For now assumed admin access or handled by frontend visibility.
         # Ideally enforce role=1 check here.
@@ -164,6 +174,11 @@ async def get_users(
 
 @router.get("/{user_id}")
 async def get_user_details(user_id: str, current_user: any = Depends(get_current_user)):
+    """
+    Obtiene la información detallada de un usuario específico mediante su ID.
+    Si el rol del usuario es Profesor, incluye la lista de clases creadas por él.
+    Si el rol es Estudiante, consulta e incluye la lista de clases en las que está inscrito.
+    """
     try:
         # 1. Get Profile
         res = supabase.table("profiles").select("*").eq("user_id", user_id).single().execute()
@@ -237,6 +252,11 @@ class UserCreateRequest(BaseModel):
 
 @router.post("/")
 async def create_user(user: UserCreateRequest, current_user: any = Depends(get_current_user)):
+    """
+    Crea un nuevo usuario en la plataforma.
+    1. Registra las credenciales en Supabase Auth mediante la API de Administración (habilitando confirmación inmediata).
+    2. Crea o actualiza el registro correspondiente en la tabla de perfiles ('profiles') con su respectivo rol.
+    """
     try:
         # 1. Map role string to int
         role_map = {"Admin": 1, "Profesor": 2, "Estudiante": 3}
@@ -291,6 +311,10 @@ async def create_user(user: UserCreateRequest, current_user: any = Depends(get_c
 
 @router.put("/{user_id}")
 async def update_user(user_id: str, user: UserUpdateRequest, current_user: any = Depends(get_current_user)):
+    """
+    Actualiza la información del perfil de un usuario existente (nombre, correo, rol o estado).
+    Modifica el registro en la tabla 'profiles' correspondiente al ID especificado.
+    """
     try:
         updates = {}
         if user.name:
@@ -330,6 +354,11 @@ async def update_user(user_id: str, user: UserUpdateRequest, current_user: any =
 
 @router.delete("/{user_id}")
 async def delete_user(user_id: str, current_user: any = Depends(get_current_user)):
+    """
+    Realiza una eliminación lógica de un usuario en el sistema.
+    Actualiza el perfil estableciendo 'ctr_estado' en 0 e 'is_active' en False.
+    Adicionalmente, intenta aplicar una suspensión/bloqueo de larga duración al usuario en Supabase Auth.
+    """
     try:
         # Logical Delete: ctr_estado=0, is_active=False
         updates = {

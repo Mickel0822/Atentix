@@ -1,0 +1,192 @@
+name: CI/CD
+
+on:
+  pull_request:
+    branches:
+      - dev
+      - main
+    paths:
+      - "backend/**"
+      - "frontend/**"
+      - ".github/workflows/ci-cd.yml"
+  push:
+    branches:
+      - dev
+      - main
+    paths:
+      - "backend/**"
+      - "frontend/**"
+      - ".github/workflows/ci-cd.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-cd-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  frontend:
+    name: Frontend checks
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder
+      NEXT_PUBLIC_API_BASE_URL: http://localhost:8000
+      NEXT_PUBLIC_WS_BASE_URL: ws://localhost:8000
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Run frontend lint
+        run: npm run lint
+
+      - name: Run frontend tests when configured
+        run: npm test --if-present
+
+      - name: Build frontend
+        run: npm run build
+
+  backend:
+    name: Backend checks
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      PYTHONPATH: ${{ github.workspace }}/backend
+      SUPABASE_URL: https://example.supabase.co
+      SUPABASE_KEY: ci-placeholder
+      GEMINI_API_KEY: ci-placeholder
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            ffmpeg \
+            libgl1 \
+            libglib2.0-0 \
+            libsm6 \
+            libxext6 \
+            libxrender1
+
+      - name: Install backend dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Check backend dependency consistency
+        run: python -m pip check
+
+      - name: Compile backend source
+        run: python -m compileall -q .
+
+      - name: Run backend tests when present
+        shell: bash
+        run: |
+          if find . -type f \( -name "test_*.py" -o -name "*_test.py" \) | grep -q .; then
+            python -m pip install pytest
+            python -m pytest
+          else
+            echo "No backend tests found; skipping pytest."
+          fi
+
+  deploy-frontend:
+    name: Deploy frontend to Vercel
+    runs-on: ubuntu-latest
+    needs:
+      - frontend
+      - backend
+    if: ${{ github.event_name != 'pull_request' && (github.ref_name == 'dev' || github.ref_name == 'main') }}
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+    steps:
+      - name: Check Vercel secrets
+        id: vercel-secrets
+        shell: bash
+        run: |
+          if [[ -n "$VERCEL_TOKEN" && -n "$VERCEL_ORG_ID" && -n "$VERCEL_PROJECT_ID" ]]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "Vercel secrets are not configured; skipping frontend deploy."
+          fi
+
+      - name: Checkout repository
+        if: steps.vercel-secrets.outputs.configured == 'true'
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        if: steps.vercel-secrets.outputs.configured == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Vercel CLI
+        if: steps.vercel-secrets.outputs.configured == 'true'
+        run: npm install --global vercel@latest
+
+      - name: Deploy frontend
+        if: steps.vercel-secrets.outputs.configured == 'true'
+        shell: bash
+        working-directory: frontend
+        run: |
+          if [[ "${GITHUB_REF_NAME}" == "main" ]]; then
+            VERCEL_ENVIRONMENT="production"
+            VERCEL_TARGET="--prod"
+          else
+            VERCEL_ENVIRONMENT="preview"
+            VERCEL_TARGET=""
+          fi
+
+          vercel pull --yes --environment="$VERCEL_ENVIRONMENT" --token="$VERCEL_TOKEN"
+          vercel build $VERCEL_TARGET --token="$VERCEL_TOKEN"
+          vercel deploy --prebuilt $VERCEL_TARGET --token="$VERCEL_TOKEN"
+
+  deploy-backend:
+    name: Deploy backend to Render
+    runs-on: ubuntu-latest
+    needs:
+      - frontend
+      - backend
+    if: ${{ github.event_name != 'pull_request' && (github.ref_name == 'dev' || github.ref_name == 'main') }}
+    env:
+      RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+    steps:
+      - name: Trigger Render deploy hook
+        shell: bash
+        run: |
+          if [[ -z "$RENDER_DEPLOY_HOOK_URL" ]]; then
+            echo "Render deploy hook is not configured; skipping backend deploy."
+            exit 0
+          fi
+
+          curl --fail --request POST "$RENDER_DEPLOY_HOOK_URL"

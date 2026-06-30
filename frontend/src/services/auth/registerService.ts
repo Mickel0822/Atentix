@@ -40,6 +40,7 @@ export async function register(
   userData: RegisterRequest
 ): Promise<RegisterResponse> {
   try {
+    // Se encapsula el contrato del registro para que la vista no conozca la API.
     const response = await httpClient.post<RegisterResponse>(
       "/auth/register",
       userData

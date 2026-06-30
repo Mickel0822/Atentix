@@ -28,7 +28,7 @@ async def register(request: RegisterRequest):
     Raises:
         HTTPException: Si el usuario ya existe, datos inválidos, o error en la creación
     """
-    # Validar que el role sea válido (1, 2 o 3)
+    # Validar el rol antes de tocar Supabase.
     if request.role not in [1, 2, 3]:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -38,8 +38,7 @@ async def register(request: RegisterRequest):
     supabase: Client = get_supabase_client()
     
     try:
-        # Verificar si el usuario ya existe en Supabase Auth o Profiles
-        # (Auth check is handled by sign_up, but we check profiles as a secondary guard)
+        # Se valida profiles como resguardo adicional para evitar duplicados.
         existing_user = supabase.table("profiles").select("email").eq("email", request.email).execute()
         
         if existing_user.data and len(existing_user.data) > 0:
@@ -67,8 +66,7 @@ async def register(request: RegisterRequest):
         
         user_id = auth_response.user.id
         
-        # 2. CREACIÓN ROBUSTA DE PERFIL (Explícita)
-        # No dependemos solo de triggers de base de datos para asegurar consistencia
+        # Se crea el perfil de forma explícita para no depender solo de triggers.
         try:
             profile_data = {
                 "user_id": user_id,
@@ -78,15 +76,14 @@ async def register(request: RegisterRequest):
                 "is_active": True,
                 "ctr_estado": 1
             }
-            # Usamos upsert por si el trigger ya lo creó, pero aseguramos que los datos sean correctos
+            # El upsert mantiene consistencia si el trigger ya generó el registro.
             supabase.table("profiles").upsert(profile_data).execute()
             print(f"[Register] ✅ Perfil creado explícitamente para {user_id}")
         except Exception as profile_error:
             print(f"[Register] ⚠️ Error creando perfil explícitamente: {profile_error}")
             # No bloqueamos el flujo, pero lo logueamos. Si falla por FK, los siguientes pasos fallarán.
 
-        # 3. Actualizar app_metadata (Requiere service_role key)
-        # Si SUPABASE_KEY es anon, esto fallará silenciosamente o con error 403
+        # Se intenta reflejar el rol en app_metadata cuando la clave lo permite.
         try:
             if hasattr(supabase.auth, 'admin') and supabase.auth.admin:
                 supabase.auth.admin.update_user_by_id(
@@ -99,7 +96,7 @@ async def register(request: RegisterRequest):
         except Exception as metadata_error:
             print(f"[Register] ⚠️ Falló actualización de app_metadata: {metadata_error}")
         
-        # 4. Auto-matricular estudiantes en TODAS las clases activas
+        # Los estudiantes quedan matriculados en las clases activas disponibles.
         if request.role == 3:  # Estudiante
             try:
                 all_classes = supabase.table("classes") \

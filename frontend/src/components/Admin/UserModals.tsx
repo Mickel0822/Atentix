@@ -14,6 +14,8 @@ interface User {
   createdAt?: string; // Add optional createdAt for details
 }
 
+// Componente de modal para agregar un nuevo usuario en la plataforma.
+// Permite ingresar nombre, correo, contraseña temporal y rol del nuevo usuario.
 export function AddUserModal({
   isOpen,
   onClose,
@@ -31,6 +33,7 @@ export function AddUserModal({
     status: "Activo",
   });
 
+  // Manejador del envío del formulario para crear el nuevo usuario.
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSave({
@@ -157,6 +160,8 @@ export function AddUserModal({
   );
 }
 
+// Componente de modal para editar la información de un usuario existente.
+// Carga los datos actuales del usuario y permite actualizar nombre, correo, rol y estado.
 export function EditUserModal({
   isOpen,
   user,
@@ -190,6 +195,7 @@ export function EditUserModal({
     };
   });
 
+  // Manejador del envío del formulario para guardar las actualizaciones del usuario.
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (user) {
@@ -298,6 +304,8 @@ export function EditUserModal({
   );
 }
 
+// Componente de modal para confirmar la eliminación de un usuario.
+// Muestra un mensaje de advertencia y ejecuta la acción de borrado al confirmar.
 export function DeleteUserModal({
   isOpen,
   user,
@@ -364,6 +372,8 @@ export function DeleteUserModal({
   );
 }
 
+// Componente de modal para restablecer la contraseña de un usuario.
+// Permite especificar una contraseña temporal o generarla automáticamente al confirmar.
 export function ResetPasswordModal({
   isOpen,
   user,
@@ -443,6 +453,8 @@ export function ResetPasswordModal({
   );
 }
 
+// Componente de modal para visualizar los detalles exhaustivos de un usuario.
+// Consulta el endpoint individual de usuario para cargar clases creadas/inscritas asociadas al perfil.
 export function UserDetailsModal({
   isOpen,
   user,
@@ -457,6 +469,7 @@ export function UserDetailsModal({
   const [details, setDetails] = useState<User | null>(null);
   const [loading, setLoading] = useState(false);
 
+  // Efecto que consulta los detalles del usuario en la API cuando se abre el modal.
   useEffect(() => {
     if (isOpen && user) {
       const fetchDetails = async () => {
@@ -486,6 +499,7 @@ export function UserDetailsModal({
   // Use details if available, otherwise fallback to user prop
   const displayUser = details || user;
 
+  // Genera y retorna la insignia estilizada del rol para los detalles del usuario.
   const getRoleBadge = (role: User["role"]) => {
     const styles = {
       Estudiante: "bg-blue-50 text-blue-700 border-blue-100",
@@ -511,6 +525,7 @@ export function UserDetailsModal({
     );
   };
 
+  // Genera y retorna la insignia estilizada del estado para los detalles del usuario.
   const getStatusBadge = (status: User["status"]) => {
     const styles = {
       Activo: "bg-green-50 text-green-700",

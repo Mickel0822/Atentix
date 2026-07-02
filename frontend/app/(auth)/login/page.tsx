@@ -27,6 +27,7 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
+      // Supabase valida las credenciales y devuelve la sesión inicial si corresponde.
       const supabase = createClientSupabase();
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -120,7 +121,7 @@ export default function LoginPage() {
           return;
         }
 
-        // No requiere MFA: ir al dashboard
+        // Sin MFA, la ruta final depende del rol guardado en app_metadata.
         const userRole = data.user?.app_metadata?.role as number | undefined;
 
         setAlertMessage("Inicio de sesión exitoso");

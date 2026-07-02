@@ -378,6 +378,7 @@ function GestiónClasesContent() {
 
   const handleEditClass = async (classData: Class) => {
     try {
+      // US-05: Enviar los datos editados de la clase (nombre, descripción, horario, estado) a la API
       await api.put(`/classes/${classData.id}`, {
         name: classData.name,
         description: classData.description,
@@ -385,7 +386,7 @@ function GestiónClasesContent() {
         is_active: classData.status === "Activo",
       });
 
-      // Actualizar estado local
+      // US-05: Actualizar el estado local en la interfaz tras una edición exitosa
       setClasses(
         classes.map((c) => (c.id === classData.id ? classData : c))
       );
@@ -400,7 +401,9 @@ function GestiónClasesContent() {
   const handleDeleteClass = async () => {
     if (selectedClass) {
       try {
+        // US-05: Enviar petición DELETE para eliminar lógicamente la clase (soft delete)
         await api.delete(`/classes/${selectedClass.id}`);
+        // US-05: Remover la clase eliminada del estado del listado en el cliente
         setClasses(classes.filter((c) => c.id !== selectedClass.id));
         setIsDeleteModalOpen(false);
         setSelectedClass(null);
@@ -414,9 +417,10 @@ function GestiónClasesContent() {
   const handleSaveCode = async (newCode: string) => {
     if (!selectedClass) return;
     try {
+      // US-05: Actualizar el código de acceso de la clase mediante la API de gestión de clases
       await api.put(`/classes/${selectedClass.id}`, { code: newCode });
 
-      // Actualizar estado local
+      // US-05: Sincronizar el nuevo código de acceso con el estado local
       const updated = classes.map((c) =>
         c.id === selectedClass.id ? { ...c, accessCode: newCode } : c
       );

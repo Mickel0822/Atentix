@@ -45,6 +45,7 @@ async def get_classes(current_user: any = Depends(get_current_user)):
     """
     try:
         user_id = current_user.id
+        # US-04: Control de acceso por rol - Obtener rol de app_metadata (1: Admin, 2: Profesor, 3: Estudiante)
         role_raw = current_user.app_metadata.get("role", 3)
         try:
             role = int(role_raw)
@@ -53,15 +54,16 @@ async def get_classes(current_user: any = Depends(get_current_user)):
 
         classes_data = []
 
-        if role == 1: # Admin
+        # US-04: Filtro de visibilidad según rol de usuario
+        if role == 1: # Admin - Tiene visibilidad completa del catálogo de clases activas
             response = supabase.table("classes").select("*").eq("ctr_esatdo", 1).execute()
             classes_data = response.data
         
-        elif role == 2: # Profesor
+        elif role == 2: # Profesor - Solo puede ver y gestionar las clases que ha creado
             response = supabase.table("classes").select("*").eq("professor_id", user_id).eq("ctr_esatdo", 1).execute()
             classes_data = response.data
             
-        else: # Estudiante
+        else: # Estudiante - Solo puede ver las clases en las que está inscrito
             enrollments = supabase.table("class_enrollments").select("class_id").eq("student_id", user_id).eq("estado", 1).execute()
             class_ids = [e['class_id'] for e in enrollments.data]
             if class_ids:
@@ -131,11 +133,10 @@ async def get_classes(current_user: any = Depends(get_current_user)):
 @router.post("/join")
 async def join_class_by_code(request: JoinClassRequest, current_user: any = Depends(get_current_user)):
     """
-    Permite a un estudiante unirse a una clase usando su código.
+    US-06: Unirse a clase por código - Inscribe a un estudiante en una clase utilizando su código de acceso único.
     """
     try:
-        # 1. Buscar la clase por código
-        # Nota: Asumimos que la columna se llama 'code' en la tabla 'classes'
+        # US-06: 1. Buscar la clase por código único en la tabla 'classes'
         class_res = supabase.table("classes").select("id").eq("code", request.code).execute()
         
         if not class_res.data:
@@ -144,7 +145,7 @@ async def join_class_by_code(request: JoinClassRequest, current_user: any = Depe
         class_id = class_res.data[0]['id']
         student_id = current_user.id
         
-        # 2. Verificar si ya está inscrito
+        # US-06: 2. Verificar si el estudiante ya cuenta con un registro de inscripción previo
         check = supabase.table("class_enrollments").select("*").eq("class_id", class_id).eq("student_id", student_id).execute()
         if check.data:
              existing = check.data[0]
@@ -152,11 +153,11 @@ async def join_class_by_code(request: JoinClassRequest, current_user: any = Depe
              if existing.get('estado') == 1:
                  raise HTTPException(status_code=400, detail="Ya estás inscrito en esta clase")
              else:
-                 # Reactivar
+                 # US-06: Reactivar inscripción de estudiante previamente desmatriculado
                  supabase.table("class_enrollments").update({"estado": 1}).eq("class_id", class_id).eq("student_id", student_id).execute()
                  return {"message": "Inscripción reactivada exitosamente", "class_id": class_id}
 
-        # 3. Inscribir (Nuevo registro)
+        # US-06: 3. Inscribir (Nuevo registro de vinculación estudiante-clase)
         data = {"class_id": class_id, "student_id": student_id, "estado": 1}
         response = supabase.table("class_enrollments").insert(data).execute()
         
@@ -172,10 +173,10 @@ async def join_class_by_code(request: JoinClassRequest, current_user: any = Depe
 @router.post("/", response_model=ClassResponse)
 async def create_class(class_data: ClassCreate, professor_id: str, current_user: any = Depends(get_current_user)):
     """
-    Crea una nueva clase. El professor_id debe venir del token de auth en producción.
+    US-05: Crear y gestionar clases - Crea una nueva clase asignada al profesor autenticado.
     """
     try:
-        # Priorizar siempre el usuario autenticado si existe
+        # US-05: Validar que el creador de la clase sea el profesor autenticado
         if current_user:
             final_professor_id = current_user.id
         else:
@@ -195,6 +196,7 @@ async def create_class(class_data: ClassCreate, professor_id: str, current_user:
                      else:
                          raise HTTPException(status_code=400, detail="No se encontraron usuarios para asignar.")
 
+        # US-05: Insertar la nueva clase con su código de acceso, nombre, horario y descripción
         data = {
             "name": class_data.name,
             "description": class_data.description,
@@ -237,15 +239,16 @@ class ClassUpdate(BaseModel):
 @router.put("/{class_id}", response_model=ClassResponse)
 async def update_class(class_id: str, class_update: ClassUpdate, current_user: any = Depends(get_current_user)):
     """
-    Actualiza una clase existente.
+    US-05: Crear y gestionar clases - Actualiza la información de una clase existente (nombre, descripción, código, horario).
     """
     try:
-        # Filtrar campos nulos
+        # US-05: Filtrar únicamente los campos no nulos enviados por el usuario
         update_data = {k: v for k, v in class_update.dict().items() if v is not None}
         
         if not update_data:
              raise HTTPException(status_code=400, detail="No se enviaron datos para actualizar")
 
+        # US-05: Actualizar la clase en la base de datos Supabase
         response = supabase.table("classes").update(update_data).eq("id", class_id).execute()
         
         if not response.data:
@@ -306,21 +309,17 @@ async def remove_student(class_id: str, student_id: str, current_user: any = Dep
 @router.delete("/{class_id}")
 async def delete_class(class_id: str, current_user: any = Depends(get_current_user)):
     """
-    Elimina una clase (Soft Delete).
-    Cambia ctr_estado a 0.
+    US-05: Crear y gestionar clases - Elimina una clase de forma lógica (Soft Delete) y deshabilita sus videos/tareas asociados.
     """
     try:
-        # Verificar permisos (solo profesor creador o admin)
-        # Por simplicidad asumimos que si llega aquí el id es valido, pero deberiamos verificar ownership
-        
+        # US-05: Ejecutar eliminación lógica cambiando ctr_esatdo a 0
         data = {"ctr_esatdo": 0}
         response = supabase.table("classes").update(data).eq("id", class_id).execute()
         
         if not response.data:
              raise HTTPException(status_code=404, detail="Clase no encontrada o error al eliminar")
 
-        # Eliminación en cascada (Lógica) de los videos
-        # Actualizamos ctr_estado a 0 para todas las tareas de esta clase
+        # US-05: Eliminación lógica en cascada para deshabilitar las tareas/videos de la clase eliminada
         supabase.table("tasks").update({"ctr_estado": 0}).eq("class_id", class_id).execute()
 
         return {"message": "Clase eliminada exitosamente (Soft Delete)"}

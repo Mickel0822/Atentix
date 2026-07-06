@@ -12,30 +12,45 @@ const mockClasses = [
   { id: "3", name: "Química Orgánica" },
 ];
 
+/**
+ * Componente principal de la página de subida de videos para profesores.
+ * Permite a los profesores seleccionar un archivo de video local, configurar los metadatos de la tarea,
+ * asociarla a una clase, establecer fechas de disponibilidad, seleccionar la cantidad de preguntas del cuestionario
+ * y enviar todo al backend para su almacenamiento y transcripción automática.
+ */
 export default function SubirVideoPage() {
   const router = useRouter();
+
+  // Estado que almacena la información del formulario de configuración de la tarea
   const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    classId: "",
-    startDate: "",
-    endDate: "",
-    numberOfQuestions: 10,
+    title: "",                 // Título asignado al video/tarea
+    description: "",           // Descripción o instrucciones de la tarea
+    classId: "",               // ID de la clase a la cual se asocia el video
+    startDate: "",             // Fecha/hora de inicio de disponibilidad (datetime-local)
+    endDate: "",               // Fecha/hora de fin de disponibilidad (datetime-local)
+    numberOfQuestions: 10,     // Número de preguntas que la IA debe generar
   });
 
-  // Estados nuevos para la integración
-  const [classes, setClasses] = useState<{ id: string, name: string }[]>([]);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [durationSeconds, setDurationSeconds] = useState<number | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
-  const [uploadError, setUploadError] = useState<string | null>(null);
+  // Estados adicionales para la gestión y control del flujo de subida
+  const [classes, setClasses] = useState<{ id: string, name: string }[]>([]); // Clases disponibles del profesor
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);         // Archivo de video seleccionado por el usuario
+  const [durationSeconds, setDurationSeconds] = useState<number | null>(null); // Duración del video calculada en el cliente
+  const [isLoading, setIsLoading] = useState(false);                           // Estado de carga durante el proceso de envío
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);         // Controla la visibilidad del modal de éxito
+  const [uploadError, setUploadError] = useState<string | null>(null);         // Almacena mensajes de error si la subida falla
 
-  // Cargar clases reales al montar el componente
+  /**
+   * Hook de React (useEffect) que se ejecuta únicamente al montar el componente.
+   * Su propósito es consultar al backend por las clases disponibles y cargarlas en el estado 'classes'.
+   * 
+   * Cómo funciona:
+   * 1. Llama de forma asíncrona a la API (GET '/classes/').
+   * 2. Si la consulta tiene éxito, actualiza el estado 'classes' con los datos devueltos.
+   * 3. Si falla, registra el error en la consola del navegador.
+   */
   useEffect(() => {
     const fetchClasses = async () => {
       try {
-        // En producción, esto debería usar el auth token
         const response = await api.get('/classes/');
         setClasses(response.data);
       } catch (error) {
@@ -45,12 +60,25 @@ export default function SubirVideoPage() {
     fetchClasses();
   }, []);
 
+  /**
+   * Manejador de evento ejecutado cuando el usuario selecciona un archivo de video.
+   * 
+   * Qué hace:
+   * 1. Almacena el archivo en el estado 'selectedFile'.
+   * 2. Calcula de forma dinámica la duración en segundos del video seleccionado directamente en el navegador del cliente.
+   * 
+   * Cómo funciona:
+   * - Utiliza `URL.createObjectURL(file)` para crear una URL temporal que apunta al archivo local en memoria.
+   * - Instancia un elemento HTML de tipo Video (`document.createElement('video')`) y asigna la URL temporal.
+   * - Al cargar los metadatos (`onloadedmetadata`), lee la propiedad `video.duration`, la redondea hacia abajo
+   *   y la guarda en 'durationSeconds'.
+   * - Posteriormente libera el objeto URL creado (`URL.revokeObjectURL`) para evitar fugas de memoria.
+   */
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       setSelectedFile(file);
       
-      // Obtener duración del video
       try {
         const videoUrl = URL.createObjectURL(file);
         const video = document.createElement('video');
@@ -76,6 +104,25 @@ export default function SubirVideoPage() {
     }
   };
 
+  /**
+   * Manejador del envío del formulario principal.
+   * 
+   * Qué hace:
+   * Envía el archivo de video junto a toda su configuración de metadatos al backend.
+   * 
+   * Cómo funciona:
+   * 1. Previene el comportamiento por defecto de recarga de página (`e.preventDefault()`).
+   * 2. Valida que se haya seleccionado un archivo de video.
+   * 3. Activa el estado de carga (`isLoading = true`) y limpia errores previos.
+   * 4. Construye un objeto `FormData` para poder enviar datos multipart/form-data (obligatorio para subir archivos binarios).
+   * 5. Agrega los campos de formulario: ID de clase, título, descripción, cantidad de preguntas y el archivo de video.
+   * 6. Convierte las fechas locales a formato estándar ISO antes de agregarlas si están presentes.
+   * 7. Adjunta la duración en segundos del video si se pudo calcular en el cliente.
+   * 8. Realiza una petición POST asíncrona a '/tasks/upload' usando Axios/fetch personalizado, indicando la cabecera 'multipart/form-data'.
+   * 9. Si la petición tiene éxito, abre el modal de éxito (`isSuccessModalOpen = true`).
+   * 10. Si la petición falla, captura el error y actualiza el estado 'uploadError' con un mensaje descriptivo.
+   * 11. Finalmente, desactiva el estado de carga (`isLoading = false`).
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedFile) {
@@ -130,6 +177,10 @@ export default function SubirVideoPage() {
     }
   };
 
+  /**
+   * Manejador de aceptación tras el modal de éxito.
+   * Cierra el modal y redirige al profesor a la página principal del panel de control de profesores.
+   */
   const handleAccept = () => {
     setIsSuccessModalOpen(false);
     router.push("/profesor");

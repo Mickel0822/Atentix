@@ -188,30 +188,45 @@ async def get_task(task_id: str):
 
 @router.post("/upload")
 async def upload_task_video(
-    class_id: str = Form(...),
-    title: str = Form(...),
-    description: str = Form(None),
-    questions_count: int = Form(5),
-    inicio_habilitado: Optional[str] = Form(None),  # ISO format datetime string
-    fin_habilitado: Optional[str] = Form(None),    # ISO format datetime string
-    duration_seconds: Optional[int] = Form(None),
-    is_active: Optional[str] = Form("true"),  # String "true" o "false"
-    video: UploadFile = File(...)
+    class_id: str = Form(..., description="ID de la clase a la cual se asociará la tarea/video"),
+    title: str = Form(..., description="Título de la tarea/video educativo"),
+    description: str = Form(None, description="Descripción opcional con instrucciones de la tarea"),
+    questions_count: int = Form(5, description="Número de preguntas que se generarán para el cuestionario adaptativo"),
+    inicio_habilitado: Optional[str] = Form(None, description="Fecha y hora de inicio de disponibilidad del video (formato ISO)"),
+    fin_habilitado: Optional[str] = Form(None, description="Fecha y hora de fin de disponibilidad del video (formato ISO)"),
+    duration_seconds: Optional[int] = Form(None, description="Duración del video en segundos (opcional, si se envía desde el cliente)"),
+    is_active: Optional[str] = Form("true", description="Establece si el video está activo ('true' o 'false')"),
+    video: UploadFile = File(..., description="Archivo de video a subir")
 ):
     """
-    Sube un video para una nueva tarea.
-    1. Guarda el video localmente (temporalmente).
-    2. Sube al Storage de Supabase.
-    3. Transcribe el video con Whisper y genera el resumen.
-    4. Crea el registro en la tabla 'tasks' con el resumen.
+    Ruta API para subir un video educativo de una tarea y procesarlo.
+    
+    ¿Qué hace?:
+    1. Recibe el archivo de video y sus metadatos asociados.
+    2. Guarda temporalmente el archivo de forma local en el servidor.
+    3. Sube el archivo al almacenamiento en la nube de Supabase (bucket 'videos').
+    4. Solicita de manera asíncrona la transcripción del video al servicio Whisper local.
+    5. Realiza un sondeo (polling) esperando a que la transcripción asíncrona termine (máximo 10 minutos).
+    6. Si no se especificó la duración del video, intenta extraerla analizando el archivo local con moviepy.
+    7. Guarda la información consolidada en la tabla 'tasks' de la base de datos de Supabase.
+    8. Limpia el archivo temporal creado localmente.
+    
+    ¿Cómo funciona?:
+    - Utiliza FastAPI `UploadFile` y `Form` para soportar la subida binaria mediante solicitudes HTTP Multipart.
+    - Se apoya en 'video_service' para almacenamiento temporal local y limpieza.
+    - Se conecta a Supabase Storage con `supabase.storage.from_("videos").upload` para el alojamiento público.
+    - Llama a 'transcription_service.start_transcription' que arranca Whisper en segundo plano (retornando un task_id de transcripción).
+    - Ejecuta un ciclo `while` asíncrono con `asyncio.sleep` para verificar periódicamente si Whisper finalizó.
+    - Al persistir en base de datos, incluye validaciones de fallbacks por si columnas nuevas no existen en la BD.
     """
     try:
-        # 1. Guardar localmente
+        # Paso 1. Guardar el archivo recibido en el almacenamiento temporal del servidor backend
         local_path = await video_service.save_upload_locally(video)
         
-        # 2. Subir a Supabase Storage
-        # Sanitizar el nombre del archivo para evitar caracteres especiales
+        # Paso 2. Subir el archivo de video al Storage de Supabase
+        # Primero, sanitizar el nombre del archivo original para evitar caracteres especiales conflictivos
         sanitized_filename = sanitize_filename(video.filename)
+        # Generar un nombre único para evitar colisiones en el bucket (UUID + nombre sanitizado)
         file_name = f"{uuid.uuid4()}_{sanitized_filename}"
         with open(local_path, "rb") as f:
             storage_response = supabase.storage.from_("videos").upload(
@@ -220,32 +235,36 @@ async def upload_task_video(
                 {"content-type": video.content_type}
             )
         
-        # Obtener URL pública
+        # Obtener la URL pública que permitirá reproducir el video en el frontend
         video_url = supabase.storage.from_("videos").get_public_url(file_name)
         
-        # 3. Transcribir video con Whisper y generar resumen
+        # Paso 3. Transcribir el video con Whisper y generar el contenido de texto (transcripción)
         print(f"[upload_task_video] Iniciando transcripción del video...")
+        # Llama al servicio de Whisper local y obtiene el ID de la tarea de transcripción en segundo plano
         transcribe_task_id = transcription_service.start_transcription(local_path)
         
-        # Polling para esperar la transcripción (máximo 10 minutos)
+        # Polling: Bucle de espera activa para consultar el estado del servicio de transcripción (máximo 10 minutos)
         summary = "Resumen no disponible (tiempo de espera agotado)."
         attempts = 0
-        max_attempts = 300  # 300 intentos * 2 segundos = 10 minutos
+        max_attempts = 300  # 300 intentos * 2 segundos = 600 segundos (10 minutos)
         
         while attempts < max_attempts:
-            await asyncio.sleep(2)  # Esperar 2 segundos entre intentos
+            await asyncio.sleep(2)  # Esperar 2 segundos entre cada consulta de estado
             attempts += 1
             
+            # Consultar el estado actual del procesamiento de la transcripción
             status_data = transcription_service.get_task_status(transcribe_task_id)
             
             if status_data is None:
-                # Tarea aún no registrada, continuar esperando
+                # Tarea aún no ha sido registrada o inicializada por el servicio, seguir esperando
                 continue
             
+            # Si el procesamiento finalizó exitosamente, capturamos el texto transcrito
             if status_data.get("status") == "completed":
                 summary = status_data.get("text") or "Transcripción vacía."
                 print(f"[upload_task_video] Transcripción completada ({attempts * 2}s)")
                 break
+            # Si el procesamiento falló, capturamos el mensaje de error
             elif status_data.get("status") == "failed":
                 error_msg = status_data.get("error", "Error en transcripción.")
                 summary = f"Resumen no disponible. {error_msg}"
@@ -255,27 +274,27 @@ async def upload_task_video(
         if attempts >= max_attempts:
             print(f"[upload_task_video] Timeout esperando transcripción después de {max_attempts * 2}s")
         
-        # 4. Crear registro en BD
+        # Paso 4. Consolidar los metadatos y la transcripción para crear la tarea en la base de datos
         task_data = {
             "class_id": class_id,
             "title": title,
             "description": description,
             "video_url": video_url,
-            "transcription": summary,  # Guardamos la transcripción en lugar del resumen
+            "transcription": summary,  # Guardamos la transcripción generada por Whisper
             "questions_count": questions_count,
-            "ctr_estado": 1 # Por defecto activo/visible (Soft Delete)
+            "ctr_estado": 1            # Indica que la tarea está activa / no eliminada lógicamente
         }
         
-        # Agregar fechas de disponibilidad si se proporcionaron
+        # Si se definieron fechas de inicio o fin de disponibilidad, las agregamos al diccionario
         if inicio_habilitado:
             task_data["inicio_habilitado"] = inicio_habilitado
         if fin_habilitado:
             task_data["fin_habilitado"] = fin_habilitado
         
-        # Agregar duración del video si se proporcionó, o intentar obtenerla del archivo
+        # Paso 5. Determinar la duración del video
         final_duration = duration_seconds
         if final_duration is None:
-            # Intentar obtener la duración del archivo local usando moviepy como fallback
+            # Fallback: Si el frontend no envió la duración, intentamos leerla del archivo local usando moviepy
             try:
                 from moviepy.editor import VideoFileClip
                 with VideoFileClip(local_path) as clip:
@@ -288,8 +307,7 @@ async def upload_task_video(
         if final_duration is not None:
             task_data["duration_seconds"] = final_duration
         
-        # Agregar is_active (convertir string a boolean)
-        # Default a True si no se especifica o si hay dudas
+        # Paso 6. Agregar estado de activación (conversión a booleano)
         is_active_bool = True
         if is_active is not None:
             is_active_bool = str(is_active).lower() == "true"
@@ -297,18 +315,19 @@ async def upload_task_video(
         task_data["is_active"] = is_active_bool
         print(f"[upload_task_video] is_active final value: {task_data['is_active']} (input: {is_active})")
         
+        # Paso 7. Insertar el registro de la tarea en la base de datos de Supabase
         try:
             db_response = supabase.table("tasks").insert(task_data).execute()
         except Exception as e:
-            # Si falla, es posible que la columna questions_count no exista aun en la BD.
-            # Intentamos insertar sin ella (fallback)
+            # Manejo de error de compatibilidad: si falla porque la columna 'questions_count' no existe
+            # en la base de datos local/remota, reintentamos la inserción excluyendo este campo.
             if "questions_count" in str(e) or "column" in str(e):
                 del task_data["questions_count"]
                 db_response = supabase.table("tasks").insert(task_data).execute()
             else:
-                raise e # Si es otro error, re-lanzarlo
+                raise e  # Si es otro error de base de datos, lo propagamos
         
-        # Limpieza
+        # Paso 8. Eliminar el archivo de video temporal para evitar saturar el disco del servidor
         video_service.cleanup(local_path)
         
         return {
@@ -316,7 +335,7 @@ async def upload_task_video(
             "task": db_response.data[0]
         }
     except Exception as e:
-        # Log del error en consola del backend para debugging
+        # Registrar cualquier excepción no controlada en la consola del backend para diagnóstico
         print(f"Error uploading task: {e}")
         raise HTTPException(status_code=500, detail=f"Error al subir video: {str(e)}")
 

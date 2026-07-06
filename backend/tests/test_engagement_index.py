@@ -5,7 +5,6 @@ os.environ.setdefault("SUPABASE_KEY", "ci-placeholder")
 
 import pytest
 
-from endpoints.websockets.attention_monitor import DrowsinessTracker
 from services.attention_logic import (
     calculate_blink_score,
     calculate_engagement_index,
@@ -13,8 +12,8 @@ from services.attention_logic import (
     calculate_full_attention_metrics,
     calculate_gaze_score,
     calculate_pose_score,
-    get_attention_status,
 )
+from services.attention_trackers import DrowsinessTracker
 
 
 def test_gaze_score_uses_default_threshold():

@@ -208,30 +208,11 @@ def calculate_engagement_index(
     wp = weights.get("pose", 0.3)
     wb = weights.get("blink", 0.2)
     
+    # Fórmula ponderada definida por el ticket US-11.
     ei = (wg * gaze_score) + (wp * pose_score) + (wb * blink_score)
     
-    # Penalización por somnolencia (EAR Score)
-    # Si ear_score < 1.0, reducimos el EI proporcionalmente
-    # Pero no lo llevamos a 0 inmediatamente a menos que sea crítico
-    if isinstance(weights, dict) and "ear_penalty_enabled" in weights:
-        # Futura config
-        pass
-        
-    # Aplicar factor de somnolencia directo
-    # Si ear_score es 0.5 (semi-cerrado), el EI se reduce a la mitad? 
-    # Mejor: Reducir max score posible.
-    # O restar penalización.
-    
-    # Implementación simple: Multiplicar por ear_score (si es drowsy, baja el score)
-    # Pero ear_score es 1.0 si > drowsy_thresh
-    # Es 0.0 si < closed_thresh
-    
-    # Necesitamos el ear_score aquí. 
-    # Como calculate_engagement_index es pura y no recibe ear, 
-    # Debemos actualizar la firma o asumir que el caller lo maneja.
-    # Vamos a actualizar la firma para recibir ear_score opcionalmente.
-    pass 
-    
+    # El ajuste por somnolencia se aplica en calculate_engagement_index_with_ear().
+    # Esta función mantiene el cálculo base puro para reutilizarlo en otros flujos.
     return max(0.0, min(1.0, ei))
 
 
@@ -245,14 +226,10 @@ def calculate_engagement_index_with_ear(
     """
     Calcula EI considerando también el estado de apertura de ojos (Somnolencia).
     """
+    # El EAR actúa como penalización directa cuando los ojos se cierran o se
+    # aproximan al umbral de somnolencia.
     base_ei = calculate_engagement_index(gaze_score, pose_score, blink_score, weights)
-    
-    # Si ear_score baja (ojos cerrándose), el engagement cae drásticamente
-    # Ejemplo: ear_score 0.5 -> EI * 0.5
-    return base_ei * ear_score
-    
-    # Asegurar que esté en el rango [0, 1]
-    return max(0.0, min(1.0, ei))
+    return max(0.0, min(1.0, base_ei * ear_score))
 
 
 def get_attention_status(
@@ -336,7 +313,8 @@ def calculate_full_attention_metrics(
     Returns:
         AttentionMetrics con todos los valores calculados
     """
-    # Calcular scores individuales
+    # Cálculo por capas: primero métricas base, luego penalización por EAR y
+    # finalmente la clasificación que consume el websocket.
     gaze_score = calculate_gaze_score(gaze_yaw)
     pose_score = calculate_pose_score(head_yaw, head_pitch)
     blink_score = calculate_blink_score(blinks_per_minute)
@@ -348,7 +326,8 @@ def calculate_full_attention_metrics(
     # Calcular engagement index con penalización de EAR
     ei = calculate_engagement_index_with_ear(gaze_score, pose_score, blink_score, ear_score)
     
-    # Determinar estado
+    # El estado final depende del índice de engagement; 'asleep' lo corrige el
+    # websocket cuando el tiempo con ojos cerrados supera el umbral.
     status = get_attention_status(ei)
     
     # Generar advertencias

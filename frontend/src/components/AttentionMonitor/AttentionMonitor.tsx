@@ -88,13 +88,13 @@ export function AttentionMonitor({
         onAlert: handleAlert
     });
 
-    // Refs estables para callbacks (evitar que cambios de callback disparen el useEffect)
+    // Mantener refs estables evita re-suscribir el efecto de métricas en cada render.
     const onAttentionChangeRef = useRef(onAttentionChange);
     const onMetricsUpdateRef = useRef(onMetricsUpdate);
     onAttentionChangeRef.current = onAttentionChange;
     onMetricsUpdateRef.current = onMetricsUpdate;
 
-    // Notificar cambios de atención con Throttling
+    // El backend puede emitir muchos eventos por segundo; aquí se limita el ruido.
     useEffect(() => {
         const now = Date.now();
         const timeDiff = now - lastMetricsTimeRef.current;
@@ -132,7 +132,7 @@ export function AttentionMonitor({
         // NO incluir onAttentionChange ni onMetricsUpdate (están en refs)
     ]);
 
-    // Inicializar cámara
+    // La cámara se activa una sola vez al montar el componente.
     useEffect(() => {
         async function initCamera() {
             try {
@@ -168,7 +168,7 @@ export function AttentionMonitor({
         };
     }, []);
 
-    // Dibujar overlay con ejes de pose
+    // El overlay solo se pinta cuando ya existen rostro y pose válidos.
     useEffect(() => {
         const overlayCanvas = overlayCanvasRef.current;
         const video = videoRef.current;

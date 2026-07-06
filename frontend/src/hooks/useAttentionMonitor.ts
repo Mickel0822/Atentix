@@ -99,7 +99,7 @@ export function useAttentionMonitor({
     const frameIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
     /**
-     * Procesa la respuesta del servidor.
+     * Normaliza la respuesta del websocket y actualiza el estado visible.
      */
     const lastUpdateRef = useRef<number>(0);
     const prevMetricsRef = useRef<string>("");
@@ -144,7 +144,7 @@ export function useAttentionMonitor({
         setBlinksPerMinute(response.blinks_per_minute || 0);
         setFaceDetected(response.face_detected);
 
-        // Lógica de alerta
+        // El umbral de alerta es de UI; no altera el score que entrega backend.
         if (response.attention_score < ALERT_THRESHOLD) {
             if (lowScoreStartRef.current === null) {
                 lowScoreStartRef.current = Date.now();

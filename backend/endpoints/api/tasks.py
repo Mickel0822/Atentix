@@ -237,7 +237,8 @@ async def upload_task_video(
                 {"content-type": video.content_type}
             )
         
-        # Obtener la URL pública que permitirá reproducir el video en el frontend
+        # REQUISITO 8: Obtener y guardar la URL pública del video.
+        # Obtener la URL pública que permitirá reproducir el video en el frontend y guardarla en la variable video_url.
         video_url = supabase.storage.from_("videos").get_public_url(file_name)
         
         # Paso 3. Transcribir el video con Whisper y generar el contenido de texto (transcripción)

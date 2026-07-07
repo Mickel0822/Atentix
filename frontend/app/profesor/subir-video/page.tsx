@@ -132,7 +132,8 @@ export default function SubirVideoPage() {
     setUploadError(null);
 
     try {
-      // Crear FormData para enviar archivo + datos
+      // REQUISITO 5: Implementar el envío del formulario mediante `multipart/form-data`.
+      // Se instancia FormData para empaquetar el archivo binario junto a los metadatos.
       const data = new FormData();
       data.append("class_id", formData.classId);
       data.append("title", formData.title);
@@ -160,6 +161,7 @@ export default function SubirVideoPage() {
       // Agregar is_active (por defecto true)
       data.append("is_active", "true");
 
+      // REQUISITO 5: Enviar la petición POST con cabecera Content-Type establecida a multipart/form-data.
       await api.post('/tasks/upload', data, {
         headers: {
           'Content-Type': 'multipart/form-data',

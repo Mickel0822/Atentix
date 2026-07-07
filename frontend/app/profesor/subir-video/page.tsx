@@ -396,6 +396,7 @@ export default function SubirVideoPage() {
                     </label>
                   </div>
 
+                  {/* REQUISITO 11: Mostrar mensaje de error en pantalla si ocurre alguna falla en la carga */}
                   {uploadError && (
                     <div className="text-red-600 text-sm font-medium p-2 bg-red-50 rounded">
                       {uploadError}
@@ -421,6 +422,7 @@ export default function SubirVideoPage() {
         </div>
       </div>
 
+      {/* REQUISITO 11: Mostrar modal de éxito tras completarse la operación correctamente */}
       {/* Modal de éxito */}
       {isSuccessModalOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">

@@ -277,6 +277,7 @@ async def upload_task_video(
         if attempts >= max_attempts:
             print(f"[upload_task_video] Timeout esperando transcripción después de {max_attempts * 2}s")
         
+        # REQUISITO 9: Registrar la información del video en la base de datos (título, descripción, URL, clase y metadatos).
         # Paso 4. Consolidar los metadatos y la transcripción para crear la tarea en la base de datos
         task_data = {
             "class_id": class_id,

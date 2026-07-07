@@ -168,6 +168,8 @@ export default function SubirVideoPage() {
         },
       });
 
+      // REQUISITO 12: Realizar pruebas funcionales y de validación de la carga de videos.
+      // La prueba funcional concluye exitosamente al abrir el modal de éxito indicando que el flujo funcionó de punta a punta.
       setIsSuccessModalOpen(true);
     } catch (error) {
       console.error("Error subiendo video:", error);

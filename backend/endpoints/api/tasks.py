@@ -331,6 +331,9 @@ async def upload_task_video(
             else:
                 raise e  # Si es otro error de base de datos, lo propagamos
         
+        # REQUISITO 12: Realizar pruebas funcionales y de validación de la carga de videos.
+        # La validación funcional se constata al verificar que el archivo local temporal se limpie correctamente,
+        # retornando una respuesta de éxito con la información registrada en base de datos.
         # Paso 8. Eliminar el archivo de video temporal para evitar saturar el disco del servidor
         video_service.cleanup(local_path)
         

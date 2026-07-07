@@ -67,6 +67,8 @@ export default function SubirVideoPage() {
    *   y la guarda en 'durationSeconds'.
    * - Posteriormente libera el objeto URL creado (`URL.revokeObjectURL`) para evitar fugas de memoria.
    */
+  // REQUISITO 4: Validar el tipo/tamaño del archivo.
+  // handleFileChange se ejecuta al seleccionar el archivo, donde se carga y se leen sus metadatos.
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
@@ -118,6 +120,9 @@ export default function SubirVideoPage() {
    */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // REQUISITO 4: Validar los campos obligatorios.
+    // Verifica que se haya seleccionado un archivo de video. Los campos de título y clase
+    // se validan de forma nativa mediante el atributo HTML 'required'.
     if (!selectedFile) {
       alert("Por favor selecciona un video");
       return;

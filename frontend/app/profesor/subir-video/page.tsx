@@ -403,6 +403,7 @@ export default function SubirVideoPage() {
                   )}
 
                   <div className="flex gap-3 justify-end pt-4 border-t border-[#e5e7eb]">
+                    {/* REQUISITO 10: Mostrar indicadores de progreso durante la carga. El botón se deshabilita e incluye un spinner animado */}
                     <button
                       type="submit"
                       disabled={isLoading}

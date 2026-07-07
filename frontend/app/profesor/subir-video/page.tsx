@@ -212,7 +212,7 @@ export default function SubirVideoPage() {
                   Subir Nuevo Video
                 </h3>
 
-                {/* File Input Area */}
+                {/* REQUISITO 3: Agregar el campo de archivo de video (file input / dropzone) */}
                 <div className="flex flex-col items-center justify-center gap-6 rounded-lg border-2 border-dashed border-primary/30 bg-primary/5 px-6 flex-1 transition-colors hover:bg-primary/10 group cursor-pointer relative overflow-hidden">
                   <input
                     type="file"
@@ -268,6 +268,7 @@ export default function SubirVideoPage() {
                   Configuración del Video
                 </h3>
                 <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+                  {/* REQUISITO 3: Agregar el campo de título del video */}
                   <label className="flex flex-col gap-2">
                     <span className="text-[#111318] text-sm font-medium">
                       Título del Video
@@ -283,6 +284,7 @@ export default function SubirVideoPage() {
                       }
                     />
                   </label>
+                  {/* REQUISITO 3: Agregar el campo de descripción del video */}
                   <label className="flex flex-col gap-2">
                     <span className="text-[#111318] text-sm font-medium">
                       Descripción

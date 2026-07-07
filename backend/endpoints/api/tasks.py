@@ -224,10 +224,11 @@ async def upload_task_video(
         # Paso 1. Guardar el archivo recibido en el almacenamiento temporal del servidor backend
         local_path = await video_service.save_upload_locally(video)
         
-        # Paso 2. Subir el archivo de video al Storage de Supabase
-        # Primero, sanitizar el nombre del archivo original para evitar caracteres especiales conflictivos
+        # REQUISITO 7: Integrar el backend con Supabase Storage para almacenar el archivo.
+        # Paso 2. Subir el archivo de video al Storage de Supabase.
+        # Primero, sanitizar el nombre del archivo original para evitar caracteres especiales conflictivos.
         sanitized_filename = sanitize_filename(video.filename)
-        # Generar un nombre único para evitar colisiones en el bucket (UUID + nombre sanitizado)
+        # Generar un nombre único para evitar colisiones en el bucket (UUID + nombre sanitizado).
         file_name = f"{uuid.uuid4()}_{sanitized_filename}"
         with open(local_path, "rb") as f:
             storage_response = supabase.storage.from_("videos").upload(

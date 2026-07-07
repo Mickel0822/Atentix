@@ -39,15 +39,8 @@ export default function SubirVideoPage() {
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);         // Controla la visibilidad del modal de éxito
   const [uploadError, setUploadError] = useState<string | null>(null);         // Almacena mensajes de error si la subida falla
 
-  /**
-   * Hook de React (useEffect) que se ejecuta únicamente al montar el componente.
-   * Su propósito es consultar al backend por las clases disponibles y cargarlas en el estado 'classes'.
-   * 
-   * Cómo funciona:
-   * 1. Llama de forma asíncrona a la API (GET '/classes/').
-   * 2. Si la consulta tiene éxito, actualiza el estado 'classes' con los datos devueltos.
-   * 3. Si falla, registra el error en la consola del navegador.
-   */
+  // REQUISITO 2: Implementar la selección de la clase.
+  // Hook de React (useEffect) que se ejecuta al montar para consultar las clases disponibles.
   useEffect(() => {
     const fetchClasses = async () => {
       try {
@@ -303,6 +296,7 @@ export default function SubirVideoPage() {
                       }
                     />
                   </label>
+                  {/* REQUISITO 2: Implementar la selección de la clase. Dropdown select para asociar la tarea a una clase */}
                   <label className="flex flex-col gap-2">
                     <span className="text-[#111318] text-sm font-medium">
                       Clase Asociada

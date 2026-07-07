@@ -186,6 +186,7 @@ async def get_task(task_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# REQUISITO 6: Desarrollar el endpoint del backend para recibir el video.
 @router.post("/upload")
 async def upload_task_video(
     class_id: str = Form(..., description="ID de la clase a la cual se asociará la tarea/video"),

@@ -39,23 +39,17 @@ def get_blink_detection_service():
 @router.post("/detect/face", response_model=FaceDetectionResponse)
 async def detect_face(request: FaceDetectionRequest):
     """
-    Endpoint para detectar rostros en una imagen.
-    
-    Args:
-        request: Request con imagen en Base64
-        
-    Returns:
-        FaceDetectionResponse con información sobre la detección del rostro
+    US-09: Detección de rostro - Endpoint para detectar rostros en una imagen en Base64.
     """
     print("=" * 50)
     print("[ENDPOINT /detect/face] ✅ REQUEST RECIBIDO")
     print("=" * 50)
     try:
-        # Convertir Base64 a OpenCV
+        # US-09: Decodificar imagen enviada en formato Base64 a matriz de imagen de OpenCV
         img = base64_to_opencv(request.image)
         print(f"[ENDPOINT] Imagen convertida: {img.shape if img is not None else 'None'}")
         
-        # Detectar rostro
+        # US-09: Delegar la detección del rostro al servicio FaceDetectionService
         result = get_face_detection_service().detect_face(img)
         
         print(f"[ENDPOINT] Resultado: detected={result.detected}, confidence={result.confidence}")
@@ -63,7 +57,7 @@ async def detect_face(request: FaceDetectionRequest):
         return result
     except Exception as e:
         print(f"[ENDPOINT] ⚠️ ERROR: {e}")
-        # En caso de error, retornar que no se detectó
+        # US-09: Retornar respuesta fallida por defecto si ocurre una excepción
         return FaceDetectionResponse(
             detected=False,
             coordinates=None,

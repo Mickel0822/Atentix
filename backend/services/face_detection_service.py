@@ -10,13 +10,10 @@ from core.config import settings
 
 class FaceDetectionService:
     """
-    Servicio de detección de rostros usando MediaPipe Tasks API (FaceDetector).
+    US-09: Detección de rostro - Servicio de detección de rostros usando MediaPipe Tasks API (FaceDetector).
     """
     def __init__(self, model_selection: int = 0, min_detection_confidence: float = 0.5):
-        # Nota: model_selection era para BlazeFace legacy (short/full).
-        # En Tasks API, usamos un modelo único (normalmente short range por defecto).
-        
-        # Usar ruta absoluta para evitar problemas de CWD
+        # US-09: Configurar la ruta absoluta del modelo face_detector.task de MediaPipe
         current_dir = os.path.dirname(os.path.abspath(__file__))
         models_dir = os.path.join(os.path.dirname(current_dir), "models")
         model_path = os.path.join(models_dir, "face_detector.task")
@@ -30,6 +27,7 @@ class FaceDetectionService:
         )
         
         try:
+            # US-09: Inicializar el detector de rostros a partir de las opciones y el archivo de modelo
             self.detector = vision.FaceDetector.create_from_options(options)
             print("[FaceDetection] ✅ FaceDetector inicializado (Tasks API)")
         except Exception as e:
@@ -41,23 +39,23 @@ class FaceDetectionService:
             return FaceDetectionResponse(detected=False, coordinates=None, confidence=0.0)
 
         try:
-            # Convertir a mp.Image
+            # US-09: Convertir frame a RGB para el correcto procesamiento en MediaPipe
             img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
             mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=img_rgb)
             
-            # Detectar
+            # US-09: Ejecutar inferencia de detección facial
             result = self.detector.detect(mp_image)
             
             if not result.detections:
                 print("[FaceDetection] ❌ No se detectó rostro")
                 return FaceDetectionResponse(detected=False, coordinates=None, confidence=0.0)
             
-            # Primer rostro
+            # US-09: Procesar el primer rostro detectado en la imagen
             detection = result.detections[0]
             confidence = detection.categories[0].score
             bbox = detection.bounding_box
             
-            # Tasks API BBox tiene origin_x, origin_y, width, height
+            # US-09: Extraer las coordenadas (bounding box) de la caja delimitadora del rostro
             x = bbox.origin_x
             y = bbox.origin_y
             w = bbox.width

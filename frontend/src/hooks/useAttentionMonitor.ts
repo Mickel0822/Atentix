@@ -99,7 +99,7 @@ export function useAttentionMonitor({
     const frameIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
     /**
-     * Procesa la respuesta del servidor.
+     * Normaliza la respuesta del websocket y actualiza el estado visible.
      */
     const lastUpdateRef = useRef<number>(0);
     const prevMetricsRef = useRef<string>("");
@@ -107,6 +107,7 @@ export function useAttentionMonitor({
     /**
      * US-09: Detección de rostro - Procesa la respuesta del servidor en tiempo real.
      */
+    // US-10: Procesar métricas, estado y advertencias recibidas durante la sesión.
     const handleMessage = useCallback((response: AttentionResponse) => {
         if (response.error) {
             console.warn("[useAttentionMonitor] Error del servidor:", response.error);
@@ -144,7 +145,7 @@ export function useAttentionMonitor({
         setBlinksPerMinute(response.blinks_per_minute || 0);
         setFaceDetected(response.face_detected);
 
-        // Lógica de alerta
+        // El umbral de alerta es de UI; no altera el score que entrega backend.
         if (response.attention_score < ALERT_THRESHOLD) {
             if (lowScoreStartRef.current === null) {
                 lowScoreStartRef.current = Date.now();
@@ -163,6 +164,7 @@ export function useAttentionMonitor({
     /**
      * US-09: Detección de rostro - Captura un frame de video de la webcam y lo envía al servidor.
      */
+    // US-10: Capturar y enviar frames mientras la cámara y el WebSocket están activos.
     const captureAndSendFrame = useCallback(() => {
         const video = videoRef.current;
         const canvas = canvasRef.current;
@@ -184,6 +186,7 @@ export function useAttentionMonitor({
         ctx.drawImage(video, 0, 0);
 
         // US-09: Generar string Base64 en formato JPEG comprimido para reducir el payload de red
+        // US-10: Comprimir el frame como JPEG para mantener fluido el monitoreo en tiempo real.
         const base64 = canvas.toDataURL("image/jpeg", 0.8);
         serviceRef.current.sendFrame(base64);
     }, [videoRef, canvasRef]);

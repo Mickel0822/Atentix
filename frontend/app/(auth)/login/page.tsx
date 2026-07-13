@@ -7,6 +7,8 @@ import { useRouter } from "next/navigation";
 import { createClientSupabase } from "@/utils/supabase/client";
 import { MFAService } from "@/services/auth/mfaService";
 import Alert from "@/components/Alert";
+import BrandLogo from "@/components/BrandLogo";
+import { getDashboardPath } from "@/lib/auth/routing";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -130,15 +132,7 @@ export default function LoginPage() {
         setIsAlertOpen(true);
 
         setTimeout(() => {
-          if (userRole === 1) {
-            window.location.href = "/admin";
-          } else if (userRole === 2) {
-            window.location.href = "/profesor";
-          } else if (userRole === 3) {
-            window.location.href = "/estudiante";
-          } else {
-            window.location.href = "/";
-          }
+          window.location.assign(getDashboardPath(userRole) ?? "/403");
         }, 1500);
         return;
       }
@@ -206,14 +200,7 @@ export default function LoginPage() {
           {/* Content Overlay */}
           <div className="relative z-10 flex flex-col h-full justify-between p-12">
             {/* Brand Logo (Light Version) */}
-            <div className="flex items-center gap-3 text-white">
-              <div className="size-8 rounded bg-white/20 flex items-center justify-center backdrop-blur-sm">
-                <span className="material-symbols-outlined text-white text-xl">
-                  school
-                </span>
-              </div>
-              <h2 className="text-xl font-bold tracking-tight">EduXriva</h2>
-            </div>
+            <BrandLogo tone="light" />
             <div className="mb-12">
               <blockquote className="text-2xl font-medium text-white leading-relaxed mb-6">
                 &ldquo;La educación es el pasaporte hacia el futuro, el mañana
@@ -255,10 +242,7 @@ export default function LoginPage() {
         <div className="flex-1 flex items-center justify-center p-6 md:p-12 relative overflow-y-auto h-full">
           <div className="w-full max-w-[440px] flex flex-col gap-8">
             {/* Mobile Header (Logo) */}
-            <div className="md:hidden flex items-center gap-2 mb-4 text-primary">
-              <span className="material-symbols-outlined text-3xl">school</span>
-              <span className="text-xl font-bold text-slate-900">EduXriva</span>
-            </div>
+            <BrandLogo className="md:hidden mb-4" />
             {/* Form Header */}
             <div className="text-center md:text-left">
               <h1 className="text-3xl md:text-4xl font-bold text-slate-900 tracking-tight mb-3">

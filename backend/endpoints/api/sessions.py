@@ -16,7 +16,12 @@ supabase: Client = create_client(settings.supabase_url, settings.supabase_key)
 
 
 class SessionStart(BaseModel):
+    """
+    US-13: Iniciar sesión de visualización - Estructura de datos requerida para el inicio de una sesión.
+    """
+    # US-13: Identificador único de la tarea o video asignado a reproducir
     task_id: str
+    # US-13: Identificador único del estudiante que iniciará la sesión
     student_id: str
 
 
@@ -33,16 +38,19 @@ class QuizAnswer(BaseModel):
 @router.post("/start")
 async def start_session(data: SessionStart, current_user: any = Depends(get_current_user)):
     """
-    Inicia una sesión de estudio cuando el estudiante empieza a ver un video.
+    US-13: Iniciar sesión de visualización - Endpoint para registrar el inicio de reproducción de un video.
     """
     try:
         # attention_level se establecerá cuando se finalice la sesión
         # No lo incluimos al iniciar porque aún no se ha calculado
         session_data = {
             "task_id": data.task_id,
-            "student_id": current_user.id, # Aseguramos que sea el usuario autenticado
+            # US-13: Asegurar la autoría vinculando únicamente el ID del usuario autenticado (current_user.id)
+            "student_id": current_user.id,
+            # US-13: La sesión de visualización inicia en estado "started" listo para el monitoreo
             "status": "started"
         }
+        # US-13: Persistir el inicio de sesión en la base de datos Supabase (tabla activity_sessions)
         response = supabase.table("activity_sessions").insert(session_data).execute()
         return {"message": "Sesión iniciada", "session": response.data[0]}
     except Exception as e:

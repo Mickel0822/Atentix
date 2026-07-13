@@ -22,10 +22,10 @@ export function EngagementBar({
     showLabel = true,
     showPercentage = true
 }: EngagementBarProps) {
-    // Convertir a porcentaje
+    // El backend entrega un score normalizado; la UI lo presenta como porcentaje.
     const percentage = Math.round(Math.max(0, Math.min(1, score)) * 100);
 
-    // Determinar color basado en el score
+    // El color expresa el estado visual del Engagement Index sin reinterpretarlo.
     const getColor = () => {
         if (percentage >= 70) return { bg: "bg-green-500", text: "text-green-400" };
         if (percentage >= 40) return { bg: "bg-yellow-500", text: "text-yellow-400" };
@@ -88,6 +88,7 @@ export function EngagementBar({
  * Versión compacta de la barra de engagement.
  */
 export function EngagementBarCompact({ score }: { score: number }) {
+    // Versión resumida para paneles densos y estados secundarios.
     const percentage = Math.round(Math.max(0, Math.min(1, score)) * 100);
 
     const getColor = () => {

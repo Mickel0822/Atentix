@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { register } from "@/services/auth";
 import { getErrorMessage, getErrorMessages } from "@/services/error";
 import Alert from "@/components/Alert";
+import BrandLogo from "@/components/BrandLogo";
 
 export default function RegistroPage() {
   const [role, setRole] = useState<"student" | "professor">("student");
@@ -115,14 +116,7 @@ export default function RegistroPage() {
           {/* Content Overlay */}
           <div className="relative z-10 flex flex-col h-full justify-between p-12">
             {/* Brand Logo (Light Version) */}
-            <div className="flex items-center gap-3 text-white">
-              <div className="size-8 rounded bg-white/20 flex items-center justify-center backdrop-blur-sm">
-                <span className="material-symbols-outlined text-white text-xl">
-                  school
-                </span>
-              </div>
-              <h2 className="text-xl font-bold tracking-tight">EduXriva</h2>
-            </div>
+            <BrandLogo tone="light" />
             <div className="mb-12">
               <blockquote className="text-2xl font-medium text-white leading-relaxed mb-6">
                 &ldquo;La educación es el pasaporte hacia el futuro, el mañana
@@ -163,10 +157,7 @@ export default function RegistroPage() {
         {/* Right Section: Registration Form */}
         <div className="flex-1 flex items-center justify-center p-6 md:p-12 relative overflow-y-auto h-full">
           {/* Mobile Header (Logo) */}
-          <div className="md:hidden absolute top-6 left-6 flex items-center gap-2 text-primary">
-            <span className="material-symbols-outlined text-3xl">school</span>
-            <span className="text-xl font-bold text-slate-900">EduXriva</span>
-          </div>
+          <BrandLogo className="md:hidden absolute top-6 left-6" />
           <div className="w-full max-w-[440px] flex flex-col gap-8">
             {/* Form Header */}
             <div className="text-center md:text-left">
@@ -174,7 +165,7 @@ export default function RegistroPage() {
                 Crea tu Cuenta
               </h1>
               <p className="text-slate-500 text-base">
-                Comienza tu viaje con EduXriva hoy.
+                Comienza tu experiencia de aprendizaje con Atentix.
               </p>
             </div>
 

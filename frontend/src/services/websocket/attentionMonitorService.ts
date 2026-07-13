@@ -59,6 +59,7 @@ export class AttentionMonitorService {
             console.log(`[AttentionMonitorService] Conectando a ${url}...`);
 
             // US-09: Crear instancia de conexión WebSocket al endpoint del backend
+            // US-10: Abrir la conexión persistente que transporta frames y métricas de atención.
             this.ws = new WebSocket(url);
 
             this.ws.onopen = () => {
@@ -68,6 +69,7 @@ export class AttentionMonitorService {
             };
 
             // US-09: Escuchar respuestas del servidor que contienen el estado de detección del rostro
+            // US-10: Recibir el Engagement Index, estado, advertencias y datos visuales del backend.
             this.ws.onmessage = (event) => {
                 try {
                     const data = JSON.parse(event.data) as AttentionResponse;
@@ -139,11 +141,13 @@ export class AttentionMonitorService {
 
         try {
             // US-09: Sanitizar el string de la imagen removiendo la cabecera MIME si estuviera presente
+            // US-10: Preparar el frame de cámara para enviarlo como payload JSON al backend.
             const base64Data = base64Image.includes(",")
                 ? base64Image.split(",")[1]
                 : base64Image;
 
             // US-09: Serializar y enviar frame en JSON a través del WebSocket abierto
+            // US-10: Transmitir el frame únicamente cuando la conexión está disponible.
             const message = JSON.stringify({ image: base64Data });
             this.ws.send(message);
             return true;

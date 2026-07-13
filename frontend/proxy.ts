@@ -9,7 +9,7 @@ import {
   isLaboratoryPath,
 } from "./src/lib/auth/routing";
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const pathname = req.nextUrl.pathname;
 
   if (isLaboratoryPath(pathname)) {
@@ -85,5 +85,13 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|api|brand/|favicon.ico|icon.jpeg).*)"],
+  matcher: [
+    "/",
+    "/login",
+    "/registro",
+    "/twoauth",
+    "/admin/:path*",
+    "/profesor/:path*",
+    "/estudiante/:path*",
+  ],
 };

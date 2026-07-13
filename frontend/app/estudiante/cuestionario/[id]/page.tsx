@@ -27,6 +27,7 @@ export default function CuestionarioPage() {
   const [reviewMode, setReviewMode] = useState(false);
   const [sessionData, setSessionData] = useState<any>(null); // Info de atención y tiempo
 
+  // AT-20: este flujo se convertirá en un formulario de reflexión sin calificación.
   // Fetch Quiz Data
   useEffect(() => {
     const fetchQuiz = async () => {
@@ -92,6 +93,7 @@ export default function CuestionarioPage() {
   const handleSubmit = async () => {
     setIsSubmitted(true);
     try {
+      // AT-20: las respuestas deben guardarse como retroalimentación asociada a la sesión.
       const res = await api.post('/sessions/quiz/submit', {
         quiz_id: quizId,
         answers: answers

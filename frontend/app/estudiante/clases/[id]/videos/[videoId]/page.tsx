@@ -203,16 +203,19 @@ export default function VerVideoPage() {
     setIsPlaying(playing);
   };
 
-  // Cuando el video termina naturalmente (onEnded), auto-generar quiz
+    // AT-20: el resultado de atención determina si corresponde solicitar retroalimentación.
+    // Cuando el video termina naturalmente (onEnded), auto-generar quiz
   const handleFinish = useCallback(async () => {
     if (videoFinished || isGeneratingQuiz) return; // Evitar doble ejecución
     setVideoFinished(true);
     setIsGeneratingQuiz(true);
 
     // Calcular nivel de atención basado en los datos acumulados
+    // AT-19: obtiene el promedio de Engagement Index de toda la reproducción.
     const avgScore = accumulatedAttention.length > 0
       ? accumulatedAttention.reduce((a, b) => a + b, 0) / accumulatedAttention.length
       : 0.5;
+    // AT-19: clasifica la atención final antes de cerrar la sesión.
     const level: "alto" | "medio" | "bajo" = avgScore > 0.7 ? "alto" : avgScore > 0.4 ? "medio" : "bajo";
 
     let activeSessionId = sessionId;
@@ -234,6 +237,7 @@ export default function VerVideoPage() {
     }
 
     try {
+      // AT-20: la sesión debe conservar el contexto necesario para las respuestas del estudiante.
       const res = await api.post("/sessions/end", {
         session_id: activeSessionId,
         attention_level: level,

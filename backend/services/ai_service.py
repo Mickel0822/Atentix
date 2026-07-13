@@ -100,6 +100,7 @@ class AIService:
         return await self.summarize_text(text)
 
     async def generate_quiz(self, text: str, attention_score: float, num_questions: int = 5) -> list:
+        # AT-20: la IA también debe generar preguntas sobre causas de distracción según la atención.
         """
         Generates a quiz based on the text.
         """

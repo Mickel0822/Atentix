@@ -31,6 +31,7 @@ class SessionEnd(BaseModel):
 
 
 class QuizAnswer(BaseModel):
+    # AT-20: este punto representa la transición futura hacia respuestas de retroalimentación sin nota.
     quiz_id: str
     answers: dict  # {"q0": "opcion_elegida", "q1": "otra_opcion", ...}
 
@@ -109,6 +110,7 @@ async def end_session(data: SessionEnd):
         print(f"[Session End] 📝 Task info - Title: {task_info.data.get('title')}")
         print(f"[Session End] 📝 Transcription: {(task_info.data.get('transcription') or 'No disponible')[:100]}...")
         
+        # AT-20: la generación asistida por IA debe orientarse a causas de desatención.
         # 3. Generar cuestionario con IA
         content_for_quiz = task_info.data.get("transcription") or \
                           f"{task_info.data.get('title', '')} {task_info.data.get('description', '')}"
@@ -135,6 +137,7 @@ async def end_session(data: SessionEnd):
         )
         print(f"[Session End] ✅ Quiz generado: {len(quiz_questions)} preguntas")
         
+        # AT-20: las respuestas de retroalimentación deberán conservarse asociadas a la sesión.
         # 4. Guardar cuestionario en BD
         quiz_data = {
             "session_id": data.session_id,

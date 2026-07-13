@@ -26,6 +26,7 @@ class SessionStart(BaseModel):
 
 
 class SessionEnd(BaseModel):
+    # AT-19: identifica la sesión activa que se cierra al finalizar el video.
     session_id: str
     attention_level: str  # 'alto', 'medio', 'bajo'
 
@@ -82,6 +83,7 @@ async def end_session(data: SessionEnd):
         print(f"[Session End] 📊 Nivel de atención: {data.attention_level}")
         
         # 1. Actualizar sesión
+        # AT-19: persiste el nivel final y marca la sesión como completada.
         update_data = {
             "attention_level": data.attention_level,
             "status": "completed",

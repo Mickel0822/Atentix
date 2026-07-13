@@ -36,7 +36,7 @@ export class AttentionMonitorService {
     }
 
     /**
-     * Inicia la conexión WebSocket.
+     * US-09: Detección de rostro - Inicia la conexión WebSocket para transmitir vídeo de la webcam.
      */
     connect(): void {
         if (this.ws?.readyState === WebSocket.OPEN) {
@@ -58,6 +58,7 @@ export class AttentionMonitorService {
             const url = `${baseUrl}${WS_ENDPOINT}`;
             console.log(`[AttentionMonitorService] Conectando a ${url}...`);
 
+            // US-09: Crear instancia de conexión WebSocket al endpoint del backend
             this.ws = new WebSocket(url);
 
             this.ws.onopen = () => {
@@ -66,6 +67,7 @@ export class AttentionMonitorService {
                 this.config.onStatusChange("connected");
             };
 
+            // US-09: Escuchar respuestas del servidor que contienen el estado de detección del rostro
             this.ws.onmessage = (event) => {
                 try {
                     const data = JSON.parse(event.data) as AttentionResponse;
@@ -127,8 +129,8 @@ export class AttentionMonitorService {
     }
 
     /**
-     * Envía un frame de imagen al servidor.
-     * @param base64Image - Imagen en formato Base64
+     * US-09: Detección de rostro - Transmite un frame de vídeo en Base64 al backend.
+     * @param base64Image - Imagen de la cámara del estudiante
      */
     sendFrame(base64Image: string): boolean {
         if (this.ws?.readyState !== WebSocket.OPEN) {
@@ -136,11 +138,12 @@ export class AttentionMonitorService {
         }
 
         try {
-            // Remover prefijo data:image/... si existe
+            // US-09: Sanitizar el string de la imagen removiendo la cabecera MIME si estuviera presente
             const base64Data = base64Image.includes(",")
                 ? base64Image.split(",")[1]
                 : base64Image;
 
+            // US-09: Serializar y enviar frame en JSON a través del WebSocket abierto
             const message = JSON.stringify({ image: base64Data });
             this.ws.send(message);
             return true;

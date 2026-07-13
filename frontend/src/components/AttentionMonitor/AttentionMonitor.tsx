@@ -133,9 +133,11 @@ export function AttentionMonitor({
     ]);
 
     // La cámara se activa una sola vez al montar el componente.
+    // US-09: Detección de rostro - Inicializar captura de video de la webcam del estudiante
     useEffect(() => {
         async function initCamera() {
             try {
+                // US-09: Solicitar permisos para capturar video de la cámara frontal con resolución ideal de 640x480
                 const stream = await navigator.mediaDevices.getUserMedia({
                     video: {
                         width: { ideal: 640 },
@@ -169,6 +171,7 @@ export function AttentionMonitor({
     }, []);
 
     // El overlay solo se pinta cuando ya existen rostro y pose válidos.
+    // US-09: Detección de rostro - Dibujar overlay 3D con ejes de rotación si se detecta la cara
     useEffect(() => {
         const overlayCanvas = overlayCanvasRef.current;
         const video = videoRef.current;
@@ -187,7 +190,7 @@ export function AttentionMonitor({
         // Limpiar canvas
         ctx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
 
-        // Dibujar ejes en el centro (aproximación; idealmente usaríamos la posición de la nariz)
+        // US-09: Calcular punto central aproximado y proyectar ejes 3D sobre la cara del usuario
         const noseX = overlayCanvas.width / 2;
         const noseY = overlayCanvas.height / 2 - 20;
 

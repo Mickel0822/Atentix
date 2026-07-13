@@ -97,14 +97,15 @@ async def websocket_attention_monitor(websocket: WebSocket):
                     await manager.send_json_message({"error": f"Error img: {str(e)}"}, websocket)
                     continue
                 
-                # --- NUEVA LÓGICA USANDO BlinkDetectionService COMO MAESTRO ---
-                # Obtener resultado completo de FaceLandmarker
+                # US-09: Detección de rostro - Obtener landmarks faciales tridimensionales del frame recibido
                 landmarker_result = blink_service.get_full_result(img)
                 
+                # US-09: Validar si se detectó algún rostro en el frame procesado
                 if not landmarker_result or not landmarker_result.face_landmarks:
                     # No rostros: Resetear trackers
                     drowsiness_tracker.reset()
                     
+                    # US-09: Enviar reporte de distracción al cliente indicando explícitamente face_detected: False
                     await manager.send_json_message({
                         "attention_score": 0.0,
                         "gaze": {"pitch": 0.0, "yaw": 0.0},

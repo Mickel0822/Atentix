@@ -105,7 +105,7 @@ export function useAttentionMonitor({
     const prevMetricsRef = useRef<string>("");
 
     /**
-     * Procesa la respuesta del servidor.
+     * US-09: Detección de rostro - Procesa la respuesta del servidor en tiempo real.
      */
     const handleMessage = useCallback((response: AttentionResponse) => {
         if (response.error) {
@@ -134,7 +134,7 @@ export function useAttentionMonitor({
         prevMetricsRef.current = metricsHash;
         lastUpdateRef.current = now;
 
-        // Actualizar métricas
+        // US-09: Actualizar estados locales de React con métricas de cara detectada y atención
         setAttentionScore(response.attention_score);
         setStatus(response.status);
         setGaze(response.gaze);
@@ -161,7 +161,7 @@ export function useAttentionMonitor({
     }, [alertActive, onAlert]);
 
     /**
-     * Captura un frame del video y lo envía al servidor.
+     * US-09: Detección de rostro - Captura un frame de video de la webcam y lo envía al servidor.
      */
     const captureAndSendFrame = useCallback(() => {
         const video = videoRef.current;
@@ -174,16 +174,16 @@ export function useAttentionMonitor({
         const ctx = canvas.getContext("2d");
         if (!ctx) return;
 
-        // Ajustar canvas al tamaño del video
+        // US-09: Ajustar dimensiones del canvas en función de la resolución nativa de la cámara
         if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
             canvas.width = video.videoWidth || 640;
             canvas.height = video.videoHeight || 480;
         }
 
-        // Dibujar frame en canvas
+        // US-09: Dibujar el frame actual de video sobre el lienzo canvas oculto
         ctx.drawImage(video, 0, 0);
 
-        // Convertir a Base64 y enviar
+        // US-09: Generar string Base64 en formato JPEG comprimido para reducir el payload de red
         const base64 = canvas.toDataURL("image/jpeg", 0.8);
         serviceRef.current.sendFrame(base64);
     }, [videoRef, canvasRef]);

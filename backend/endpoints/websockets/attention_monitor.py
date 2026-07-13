@@ -23,7 +23,7 @@ from utils.image_utils import base64_to_opencv
 
 router = APIRouter()
 
-# Instancia del gestor de conexiones
+# US-10: Gestor dedicado para mantener el monitoreo de atención en tiempo real.
 manager = ConnectionManager()
 
 # Servicios inicializados de forma lazy
@@ -56,6 +56,7 @@ def get_services():
 
 @router.websocket("/ws/monitor")
 async def websocket_attention_monitor(websocket: WebSocket):
+    # US-10: Cada estudiante conserva sus propios trackers durante la sesión WebSocket.
     await manager.connect(websocket)
     
     blink_tracker = BlinkRateTracker(window_seconds=60.0)
@@ -73,6 +74,7 @@ async def websocket_attention_monitor(websocket: WebSocket):
     try:
         while True:
             try:
+                # US-10: El cliente transmite cada frame como un mensaje JSON sobre la conexión activa.
                 data = await websocket.receive_text()
                 message = json.loads(data)
                 
@@ -218,6 +220,7 @@ async def websocket_attention_monitor(websocket: WebSocket):
                     "face_detected": True
                 }
                 
+                # US-10: Devolver métricas, estado y advertencias para actualizar la interfaz en vivo.
                 await manager.send_json_message(response, websocket)
                 
             except json.JSONDecodeError:

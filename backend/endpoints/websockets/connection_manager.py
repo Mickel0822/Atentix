@@ -58,6 +58,7 @@ class ConnectionManager:
             data: Datos a enviar (serán serializados a JSON)
             websocket: Conexión WebSocket destino
         """
+        # US-10: Serializar la respuesta de atención con un contrato único para el frontend.
         message = json.dumps(data)
         await self.send_personal_message(message, websocket)
     

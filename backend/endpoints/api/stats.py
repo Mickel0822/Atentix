@@ -89,20 +89,19 @@ async def get_task_results(task_id: str, current_user: any = Depends(get_current
 @router.get("/professor-dashboard")
 async def get_professor_stats(current_user: any = Depends(get_current_user)):
     """
-    Retorna estadisticas para el dashboard del profesor:
-    - active_classes: Cantidad de clases del profesor.
-    - total_students: Suma de inscripciones en sus clases.
-    - pending_evaluations: Total de videos que los alumnos aun no han completado.
-    - average_score: Promedio (Mock por ahora).
+    AT-21: Dashboard-profesor - Retorna estadísticas consolidadas de la actividad académica.
+    Incluye conteos de clases activas, alumnos inscritos, evaluaciones y promedios.
     """
     try:
+        # AT-21: Garantizar la privacidad y alcance filtrando datos únicamente para el docente autenticado
         user_id = current_user.id
         
-        # 1. Obtener clases del profesor
+        # AT-21: Consulta inicial a Supabase para recuperar todas las clases creadas por el docente
         classes_res = supabase.table("classes").select("id, name").eq("professor_id", user_id).execute()
         class_ids = [c['id'] for c in classes_res.data]
         class_map = {c['id']: c['name'] for c in classes_res.data}
         
+        # AT-21: Retornar estructura de datos vacía si el docente no tiene clases registradas aún
         if not class_ids:
             return {
                 "total_students": 0,

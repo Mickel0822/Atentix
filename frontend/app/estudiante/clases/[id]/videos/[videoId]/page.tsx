@@ -210,9 +210,11 @@ export default function VerVideoPage() {
     setIsGeneratingQuiz(true);
 
     // Calcular nivel de atención basado en los datos acumulados
+    // AT-19: obtiene el promedio de Engagement Index de toda la reproducción.
     const avgScore = accumulatedAttention.length > 0
       ? accumulatedAttention.reduce((a, b) => a + b, 0) / accumulatedAttention.length
       : 0.5;
+    // AT-19: clasifica la atención final antes de cerrar la sesión.
     const level: "alto" | "medio" | "bajo" = avgScore > 0.7 ? "alto" : avgScore > 0.4 ? "medio" : "bajo";
 
     let activeSessionId = sessionId;

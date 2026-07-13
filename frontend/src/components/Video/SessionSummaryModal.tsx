@@ -20,6 +20,7 @@ export default function SessionSummaryModal({
   totalVideoTime,
 }: SessionSummaryModalProps) {
   // Calcular estadísticas
+  // AT-19: resume las métricas recolectadas durante la sesión de reproducción.
   const stats = useMemo(() => {
     if (accumulatedAttention.length === 0 || totalVideoTime === 0) {
       return {
@@ -35,6 +36,7 @@ export default function SessionSummaryModal({
     }
 
     // Promedio de atención en porcentaje
+    // AT-19: calcula el promedio utilizado para clasificar el nivel final.
     const avgAttention =
       (accumulatedAttention.reduce((a, b) => a + b, 0) /
         accumulatedAttention.length) *
@@ -107,6 +109,7 @@ export default function SessionSummaryModal({
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto m-4">
         {/* Header */}
         <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
+          {/* AT-19: muestra el resumen de atención al cerrar la sesión. */}
           <h2 className="text-2xl font-bold text-gray-900">
             Resumen de la Sesión
           </h2>

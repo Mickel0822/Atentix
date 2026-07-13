@@ -8,6 +8,7 @@ import api from "@/services/api";
 
 export default function ProfesorDashboard() {
   const router = useRouter();
+  // AT-21: Inicializar estados para clases del docente e indicadores de rendimiento/atención
   const [classes, setClasses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
@@ -18,9 +19,11 @@ export default function ProfesorDashboard() {
     recent_evaluations: []
   });
 
+  // AT-21: Efecto de montaje para poblar el dashboard del docente de manera concurrente
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
+        // AT-21: Ejecutar llamadas en paralelo para reducir la latencia de carga inicial
         const [classRes, statsRes] = await Promise.all([
           api.get('/classes/'),
           api.get('/stats/professor-dashboard')

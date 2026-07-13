@@ -89,20 +89,19 @@ async def get_task_results(task_id: str, current_user: any = Depends(get_current
 @router.get("/professor-dashboard")
 async def get_professor_stats(current_user: any = Depends(get_current_user)):
     """
-    Retorna estadisticas para el dashboard del profesor:
-    - active_classes: Cantidad de clases del profesor.
-    - total_students: Suma de inscripciones en sus clases.
-    - pending_evaluations: Total de videos que los alumnos aun no han completado.
-    - average_score: Promedio (Mock por ahora).
+    AT-21: Dashboard-profesor - Retorna estadísticas consolidadas de la actividad académica.
+    Incluye conteos de clases activas, alumnos inscritos, evaluaciones y promedios.
     """
     try:
+        # AT-21: Garantizar la privacidad y alcance filtrando datos únicamente para el docente autenticado
         user_id = current_user.id
         
-        # 1. Obtener clases del profesor
+        # AT-21: Consulta inicial a Supabase para recuperar todas las clases creadas por el docente
         classes_res = supabase.table("classes").select("id, name").eq("professor_id", user_id).execute()
         class_ids = [c['id'] for c in classes_res.data]
         class_map = {c['id']: c['name'] for c in classes_res.data}
         
+        # AT-21: Retornar estructura de datos vacía si el docente no tiene clases registradas aún
         if not class_ids:
             return {
                 "total_students": 0,
@@ -112,21 +111,23 @@ async def get_professor_stats(current_user: any = Depends(get_current_user)):
                 "recent_evaluations": []
             }
 
-        # 2. Total Estudiantes (Matriculados)
+        # AT-21: Obtener la cantidad de alumnos inscritos en las clases del docente
         enrollments_res = supabase.table("class_enrollments").select("student_id, class_id").in_("class_id", class_ids).execute()
         enrollments_data = enrollments_res.data
         total_students = len(enrollments_data)
         
-        # 3. Evaluaciones Pendientes
+        # AT-21: Recuperar un subconjunto de videos asignados a las clases para auditorías rápidas
         tasks_res = supabase.table("tasks").select("id, class_id, title, created_at").in_("class_id", class_ids).order("created_at", desc=True).limit(10).execute()
         tasks_data = tasks_res.data
         task_ids = [t['id'] for t in tasks_data]
         
+        # AT-21: Mapear el volumen de estudiantes matriculados por cada clase para cálculo de visualizaciones
         class_student_counts = {}
         for e in enrollments_data:
             cid = e['class_id']
             class_student_counts[cid] = class_student_counts.get(cid, 0) + 1
             
+        # AT-21: Estimar visualizaciones esperadas (N° de videos publicados por clase * N° de alumnos de la clase)
         total_expected_views = 0
         all_tasks_res = supabase.table("tasks").select("id, class_id").in_("class_id", class_ids).execute()
         task_class_map_all = {t['id']: t['class_id'] for t in all_tasks_res.data}
@@ -139,19 +140,20 @@ async def get_professor_stats(current_user: any = Depends(get_current_user)):
         all_task_ids = [t['id'] for t in all_tasks_res.data]
         completed_count = 0
         
-        # Pre-calcular promedios de clase
+        # AT-21: Inicializar objeto de promedios por clase para métricas de desatención
         class_averages = {}
         
         if all_task_ids:
+            # AT-21: Recuperar sesiones completadas para auditorías de atención media/baja
             sessions_res = supabase.table("activity_sessions") \
                 .select("id, task_id, status") \
                 .in_("task_id", all_task_ids) \
-                .execute() # Traemos todas para contar completadas y calcular promedios
+                .execute()
             
             completed_sessions = [s for s in sessions_res.data if s['status'] == 'completed']
             completed_count = len(completed_sessions)
             
-            # Calcular promedios de clase
+            # AT-21: Obtener las puntuaciones de los cuestionarios asociados para promedios de rendimiento y atención
             comp_sess_ids = [s['id'] for s in completed_sessions]
             sess_task_map = {s['id']: s['task_id'] for s in completed_sessions}
             
@@ -172,12 +174,12 @@ async def get_professor_stats(current_user: any = Depends(get_current_user)):
                 for cid, scores_list in class_scores_acc.items():
                     class_averages[cid] = sum(scores_list) / len(scores_list)
             
-            
+        # AT-21: Calcular la diferencia entre visualizaciones esperadas y completadas para las pendientes
         pending = total_expected_views - completed_count
         if pending < 0: 
             pending = 0
 
-        # 4. Ultimas Evaluaciones (Promedio por Tarea)
+        # AT-21: Construir historial de últimas evaluaciones y comportamiento de los alumnos
         recent_evals = []
         seen_classes = set()
 
@@ -186,15 +188,11 @@ async def get_professor_stats(current_user: any = Depends(get_current_user)):
              if cid in seen_classes:
                  continue
 
-             # a. Buscar sesiones completadas para esta tarea ESPECIFICA (para avg de la tarea)
-             # Podriamos reutilizar completed_sessions filtrando, pero por claridad y volumen bajo (10) dejamos logica o filtramos en memoria
+             # AT-21: Agrupar resultados y promediar scores del video para identificar desatención
              task_sess_ids = [s['id'] for s in sessions_res.data if s['task_id'] == task['id'] and s['status'] == 'completed']
              
              scores = []
              if task_sess_ids:
-                 # Necesitamos notas de estas sesiones. Si ya las trajimos arriba (en quizzes_res), filtramos en memoria si es posible
-                 # Pero quizzes_res solo tiene de completed_sessions globales. Sí sirve.
-                 # Hacemos query puntual para asegurar consistencia con logica anterior o filtramos. Query es seguro.
                  t_quizzes_res = supabase.table("generated_quizzes").select("score_obtained").in_("session_id", task_sess_ids).execute()
                  for q in t_quizzes_res.data:
                      if q.get('score_obtained') is not None:
@@ -207,6 +205,7 @@ async def get_professor_stats(current_user: any = Depends(get_current_user)):
              class_avg = class_averages.get(task['class_id'], 0)
 
              seen_classes.add(cid)
+             # AT-21: Estructurar payload enriquecido con datos de clase y rendimiento consolidado
              recent_evals.append({
                  "id": task['id'],
                  "title": task.get('title', 'Evaluación'),

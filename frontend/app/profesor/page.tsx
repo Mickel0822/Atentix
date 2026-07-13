@@ -8,6 +8,7 @@ import api from "@/services/api";
 
 export default function ProfesorDashboard() {
   const router = useRouter();
+  // AT-21: Inicializar estados para clases del docente e indicadores de rendimiento/atención
   const [classes, setClasses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
@@ -18,9 +19,11 @@ export default function ProfesorDashboard() {
     recent_evaluations: []
   });
 
+  // AT-21: Efecto de montaje para poblar el dashboard del docente de manera concurrente
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
+        // AT-21: Ejecutar llamadas en paralelo para reducir la latencia de carga inicial
         const [classRes, statsRes] = await Promise.all([
           api.get('/classes/'),
           api.get('/stats/professor-dashboard')
@@ -55,9 +58,10 @@ export default function ProfesorDashboard() {
       />
       <div className="p-6 md:p-8 max-w-7xl mx-auto w-full flex flex-col gap-8">
 
-        {/* Stats Grid - Compact */}
+        {/* AT-21: Grid de Indicadores Clave - Mapea y renderiza las estadísticas globales obtenidas de la API */}
         <section aria-label="Estadísticas">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            {/* AT-21: Card para visualización de Clases Activas asignadas al docente */}
             <div className="bg-white rounded-xl p-4 border border-[#e5e7eb] shadow-sm flex flex-col gap-2">
               <div className="bg-primary/10 p-2 rounded-lg text-primary w-fit">
                 <span className="material-symbols-outlined text-[20px]">class</span>
@@ -67,7 +71,7 @@ export default function ProfesorDashboard() {
                 <h3 className="text-[#111318] text-xl font-bold mt-0.5">{stats.active_classes}</h3>
               </div>
             </div>
-            {/* Students Card - Purple */}
+            {/* AT-21: Card para visualización de Estudiantes Matriculados en la totalidad de sus cursos */}
             <div className="bg-white rounded-xl p-4 border border-[#e5e7eb] shadow-sm flex flex-col gap-2">
               <div className="bg-purple-50 p-2 rounded-lg text-purple-600 w-fit">
                 <span className="material-symbols-outlined text-[20px]">group</span>
@@ -78,7 +82,7 @@ export default function ProfesorDashboard() {
               </div>
             </div>
 
-            {/* Pending Evaluations Card - Orange */}
+            {/* AT-21: Card para visualización de Evaluaciones Pendientes acumuladas */}
             <div className="bg-white rounded-xl p-4 border border-[#e5e7eb] shadow-sm flex flex-col gap-2">
               <div className="bg-orange-50 p-2 rounded-lg text-orange-600 w-fit">
                 <span className="material-symbols-outlined text-[20px]">assignment</span>
@@ -94,7 +98,7 @@ export default function ProfesorDashboard() {
           </div>
         </section>
 
-        {/* Clases Activas */}
+        {/* AT-21: Sección "Mis Clases" - Visualiza en cuadrícula el listado de asignaturas activas */}
         <section aria-label="Clases">
           <h2 className="text-lg font-bold text-[#111318] mb-4">Mis Clases</h2>
 
@@ -125,10 +129,12 @@ export default function ProfesorDashboard() {
                   </p>
 
                   <div className="flex justify-between items-center pt-3 border-t border-gray-100 mt-auto">
+                    {/* AT-21: Mostrar cantidad de estudiantes matriculados en esta clase */}
                     <div className="flex items-center gap-1.5 text-gray-600 font-medium text-xs">
                       <span className="material-symbols-outlined text-[18px]">group</span>
                       {classItem.students_count || 0} Estudiantes
                     </div>
+                    {/* AT-21: Cantidad de videos instructivos asignados en este curso */}
                     <div className="flex items-center gap-1.5 text-gray-600 font-medium text-xs">
                       <span className="material-symbols-outlined text-[18px]">video_library</span>
                       {classItem.videos_count || 0} Videos
@@ -146,7 +152,7 @@ export default function ProfesorDashboard() {
           )}
         </section>
 
-        {/* Últimas Evaluaciones */}
+        {/* AT-21: Sección "Últimas Evaluaciones" - Muestra rendimiento general y promedios de atención */}
         <section aria-label="Últimas Evaluaciones">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-bold text-[#111318]">Últimas Evaluaciones</h2>
@@ -161,7 +167,7 @@ export default function ProfesorDashboard() {
                 <div className="p-5 text-center text-gray-500">No hay evaluaciones registradas aún.</div>
               ) : (
                 stats.recent_evaluations.map((evalItem: any, index: number) => {
-                  // Colores rotativos
+                  // AT-21: Asignar clase de color de forma rotativa para propósitos de diseño visual y responsive
                   const colors = [
                     "bg-red-50 text-red-600",
                     "bg-blue-50 text-blue-600",
@@ -182,6 +188,7 @@ export default function ProfesorDashboard() {
                           <p className="text-[10px] text-[#616f89] mt-0.5">{evalItem.time_ago}</p>
                         </div>
                       </div>
+                      {/* AT-21: Indicador de promedio de la clase (evalItem.class_average) obtenido dinámicamente */}
                       <div className="text-right">
                         <span className="block text-lg font-bold text-[#111318]">{evalItem.class_average}/20</span>
                         <p className="text-[10px] text-[#616f89]">Promedio General</p>

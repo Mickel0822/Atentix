@@ -16,7 +16,12 @@ supabase: Client = create_client(settings.supabase_url, settings.supabase_key)
 
 
 class SessionStart(BaseModel):
+    """
+    US-13: Iniciar sesión de visualización - Estructura de datos requerida para el inicio de una sesión.
+    """
+    # US-13: Identificador único de la tarea o video asignado a reproducir
     task_id: str
+    # US-13: Identificador único del estudiante que iniciará la sesión
     student_id: str
 
 

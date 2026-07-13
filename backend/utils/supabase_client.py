@@ -17,3 +17,12 @@ def get_supabase_client() -> Client:
     supabase_url = settings.supabase_url.rstrip('/') + '/'
     return create_client(supabase_url, settings.supabase_key)
 
+
+def get_supabase_admin_client() -> Client | None:
+    """Retorna el cliente administrativo cuando la credencial está configurada."""
+    if not settings.supabase_service_role_key:
+        return None
+
+    supabase_url = settings.supabase_url.rstrip('/') + '/'
+    return create_client(supabase_url, settings.supabase_service_role_key)
+

@@ -61,6 +61,7 @@ export function AttentionMonitor({
     }, []);
 
     // Hook de monitoreo de atención
+    // US-10: Conectar la cámara con el ciclo de envío y recepción del monitoreo WebSocket.
     const {
         connectionStatus,
         isConnected,
@@ -267,6 +268,7 @@ export function AttentionMonitor({
 
             {/* Panel de métricas */}
             <div className="mt-4 p-4 bg-gray-800 rounded-lg">
+                {/* US-10: Representar visualmente el nivel de atención recibido en tiempo real. */}
                 <EngagementBar score={attentionScore} />
 
                 {/* Estado */}

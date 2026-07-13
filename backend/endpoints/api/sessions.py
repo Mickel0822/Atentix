@@ -38,14 +38,15 @@ class QuizAnswer(BaseModel):
 @router.post("/start")
 async def start_session(data: SessionStart, current_user: any = Depends(get_current_user)):
     """
-    Inicia una sesión de estudio cuando el estudiante empieza a ver un video.
+    US-13: Iniciar sesión de visualización - Endpoint para registrar el inicio de reproducción de un video.
     """
     try:
         # attention_level se establecerá cuando se finalice la sesión
         # No lo incluimos al iniciar porque aún no se ha calculado
         session_data = {
             "task_id": data.task_id,
-            "student_id": current_user.id, # Aseguramos que sea el usuario autenticado
+            # US-13: Asegurar la autoría vinculando únicamente el ID del usuario autenticado (current_user.id)
+            "student_id": current_user.id,
             "status": "started"
         }
         response = supabase.table("activity_sessions").insert(session_data).execute()

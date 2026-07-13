@@ -111,21 +111,23 @@ async def get_professor_stats(current_user: any = Depends(get_current_user)):
                 "recent_evaluations": []
             }
 
-        # 2. Total Estudiantes (Matriculados)
+        # AT-21: Obtener la cantidad de alumnos inscritos en las clases del docente
         enrollments_res = supabase.table("class_enrollments").select("student_id, class_id").in_("class_id", class_ids).execute()
         enrollments_data = enrollments_res.data
         total_students = len(enrollments_data)
         
-        # 3. Evaluaciones Pendientes
+        # AT-21: Recuperar un subconjunto de videos asignados a las clases para auditorías rápidas
         tasks_res = supabase.table("tasks").select("id, class_id, title, created_at").in_("class_id", class_ids).order("created_at", desc=True).limit(10).execute()
         tasks_data = tasks_res.data
         task_ids = [t['id'] for t in tasks_data]
         
+        # AT-21: Mapear el volumen de estudiantes matriculados por cada clase para cálculo de visualizaciones
         class_student_counts = {}
         for e in enrollments_data:
             cid = e['class_id']
             class_student_counts[cid] = class_student_counts.get(cid, 0) + 1
             
+        # AT-21: Estimar visualizaciones esperadas (N° de videos publicados por clase * N° de alumnos de la clase)
         total_expected_views = 0
         all_tasks_res = supabase.table("tasks").select("id, class_id").in_("class_id", class_ids).execute()
         task_class_map_all = {t['id']: t['class_id'] for t in all_tasks_res.data}

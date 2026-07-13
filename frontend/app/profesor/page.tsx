@@ -58,9 +58,10 @@ export default function ProfesorDashboard() {
       />
       <div className="p-6 md:p-8 max-w-7xl mx-auto w-full flex flex-col gap-8">
 
-        {/* Stats Grid - Compact */}
+        {/* AT-21: Grid de Indicadores Clave - Mapea y renderiza las estadísticas globales obtenidas de la API */}
         <section aria-label="Estadísticas">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            {/* AT-21: Card para visualización de Clases Activas asignadas al docente */}
             <div className="bg-white rounded-xl p-4 border border-[#e5e7eb] shadow-sm flex flex-col gap-2">
               <div className="bg-primary/10 p-2 rounded-lg text-primary w-fit">
                 <span className="material-symbols-outlined text-[20px]">class</span>
@@ -70,7 +71,7 @@ export default function ProfesorDashboard() {
                 <h3 className="text-[#111318] text-xl font-bold mt-0.5">{stats.active_classes}</h3>
               </div>
             </div>
-            {/* Students Card - Purple */}
+            {/* AT-21: Card para visualización de Estudiantes Matriculados en la totalidad de sus cursos */}
             <div className="bg-white rounded-xl p-4 border border-[#e5e7eb] shadow-sm flex flex-col gap-2">
               <div className="bg-purple-50 p-2 rounded-lg text-purple-600 w-fit">
                 <span className="material-symbols-outlined text-[20px]">group</span>
@@ -81,7 +82,7 @@ export default function ProfesorDashboard() {
               </div>
             </div>
 
-            {/* Pending Evaluations Card - Orange */}
+            {/* AT-21: Card para visualización de Evaluaciones Pendientes acumuladas */}
             <div className="bg-white rounded-xl p-4 border border-[#e5e7eb] shadow-sm flex flex-col gap-2">
               <div className="bg-orange-50 p-2 rounded-lg text-orange-600 w-fit">
                 <span className="material-symbols-outlined text-[20px]">assignment</span>

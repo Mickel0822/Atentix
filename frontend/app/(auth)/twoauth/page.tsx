@@ -6,6 +6,8 @@ import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClientSupabase } from "@/utils/supabase/client";
 import { MFAService } from "@/services/auth/mfaService";
+import BrandLogo from "@/components/BrandLogo";
+import { getDashboardPath } from "@/lib/auth/routing";
 
 function TwoAuthForm() {
   const searchParams = useSearchParams();
@@ -133,15 +135,7 @@ function TwoAuthForm() {
         }
 
         const userRole = session.user?.app_metadata?.role as number | undefined;
-        if (userRole === 1) {
-          window.location.href = "/admin";
-        } else if (userRole === 2) {
-          window.location.href = "/profesor";
-        } else if (userRole === 3) {
-          window.location.href = "/estudiante";
-        } else {
-          window.location.href = "/";
-        }
+        window.location.assign(getDashboardPath(userRole) ?? "/403");
       } else {
         setError("No se encontró un factor MFA. Actívalo desde tu perfil o inicia sesión de nuevo.");
       }
@@ -175,14 +169,7 @@ function TwoAuthForm() {
         {/* Content Overlay */}
         <div className="relative z-10 flex flex-col h-full justify-between p-12">
           {/* Brand Logo (Light Version) */}
-          <div className="flex items-center gap-3 text-white">
-            <div className="size-8 rounded bg-white/20 flex items-center justify-center backdrop-blur-sm">
-              <span className="material-symbols-outlined text-white text-xl">
-                school
-              </span>
-            </div>
-            <h2 className="text-xl font-bold tracking-tight">EduXriva</h2>
-          </div>
+          <BrandLogo tone="light" />
           <div className="mb-12">
             <blockquote className="text-2xl font-medium text-white leading-relaxed mb-6">
               &ldquo;La seguridad es fundamental. Protege tu cuenta con autenticación
@@ -222,12 +209,7 @@ function TwoAuthForm() {
       {/* Right Section: 2FA Form */}
       <div className="flex-1 flex items-center justify-center p-6 md:p-12 relative overflow-y-auto h-full">
         {/* Mobile Header (Logo) */}
-        <div className="md:hidden absolute top-6 left-6 flex items-center gap-2 text-primary">
-          <span className="material-symbols-outlined text-3xl">school</span>
-          <span className="text-xl font-bold text-slate-900">
-            EduXriva
-          </span>
-        </div>
+        <BrandLogo className="md:hidden absolute top-6 left-6" />
         <div className="w-full max-w-[480px] flex flex-col items-center justify-center">
           <div className="relative w-full bg-white rounded-xl shadow-xl overflow-hidden border border-slate-200">
             <div className="absolute top-0 left-0 right-0 h-1.5 bg-primary"></div>

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { createClientSupabase } from "@/utils/supabase/client";
+import BrandLogo from "@/components/BrandLogo";
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -42,21 +43,7 @@ export default function Sidebar() {
     <aside className="w-64 flex flex-col justify-between bg-white border-r border-[#e5e7eb] transition-colors duration-200 hidden md:flex z-20">
       <div className="flex flex-col gap-4 p-4 h-full">
         {/* Logo & Brand */}
-        <div className="flex items-center gap-3 px-2 py-3">
-          <div className="bg-primary aspect-square rounded-lg size-10 flex items-center justify-center text-white">
-            <span className="material-symbols-outlined !text-[28px]">
-              school
-            </span>
-          </div>
-          <div className="flex flex-col">
-            <h1 className="text-[#111318] text-lg font-bold leading-tight">
-              EduXriva
-            </h1>
-            <p className="text-[#616f89] text-xs font-normal">
-              Panel de Control
-            </p>
-          </div>
-        </div>
+        <BrandLogo className="px-2 py-3" subtitle="Panel de Control" />
 
         {/* Navigation */}
         <nav className="flex flex-col gap-2 mt-4 flex-1">

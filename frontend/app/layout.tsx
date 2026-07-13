@@ -9,8 +9,15 @@ const lexend = Lexend({
 });
 
 export const metadata: Metadata = {
-  title: "EduXriva - Sistema de Detección",
-  description: "Sistema de detección de atención",
+  title: {
+    default: "Atentix | IA que potencia el aprendizaje",
+    template: "%s | Atentix",
+  },
+  description: "Plataforma de aprendizaje con monitoreo de atención en tiempo real.",
+  icons: {
+    icon: "/icon.jpeg",
+    shortcut: "/icon.jpeg",
+  },
 };
 
 export default function RootLayout({
@@ -26,9 +33,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className={`${lexend.variable} font-display antialiased`}>
-        {children}
-      </body>
+      <body className={`${lexend.variable} font-display antialiased`}>{children}</body>
     </html>
   );
 }

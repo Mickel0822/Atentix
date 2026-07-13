@@ -1,88 +1,89 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import {
+  canAccessDashboard,
+  getDashboardPath,
+  isAuthenticationPath,
+  isDashboardPath,
+  isLaboratoryPath,
+} from "./src/lib/auth/routing";
 
 export async function middleware(req: NextRequest) {
-  const res = NextResponse.next();
+  const pathname = req.nextUrl.pathname;
 
+  if (isLaboratoryPath(pathname)) {
+    return NextResponse.next();
+  }
+
+  const res = NextResponse.next();
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
         get: (name: string) => req.cookies.get(name)?.value,
-        set: (
-          name: string,
-          value: string,
-          options: {
-            path?: string;
-            domain?: string;
-            maxAge?: number;
-            httpOnly?: boolean;
-            secure?: boolean;
-            sameSite?: "strict" | "lax" | "none" | boolean;
-          }
-        ) => {
-          res.cookies.set({
-            name,
-            value,
-            ...options,
-          });
+        set: (name: string, value: string, options) => {
+          res.cookies.set({ name, value, ...options });
         },
-        remove: (name: string, options: { path?: string; domain?: string }) => {
-          res.cookies.set({
-            name,
-            value: "",
-            ...options,
-          });
+        remove: (name: string, options) => {
+          res.cookies.set({ name, value: "", ...options });
         },
       },
-    }
+    },
   );
 
   const { data } = await supabase.auth.getSession();
   const session = data.session;
 
+  const redirectTo = (path: string) => {
+    const response = NextResponse.redirect(new URL(path, req.url));
+
+    res.cookies.getAll().forEach((cookie) => response.cookies.set(cookie));
+
+    return response;
+  };
+
   if (!session) {
-    return NextResponse.redirect(new URL("/login", req.url));
+    if (pathname === "/login" || pathname === "/registro") {
+      return res;
+    }
+
+    return redirectTo("/login");
   }
 
-  const pathname = req.nextUrl.pathname;
-
-  // Si tiene sesión pero requiere MFA (AAL1 con nextLevel aal2), redirigir a /twoauth
+  let requiresMFA = false;
   try {
     const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-    if (
-      aal?.nextLevel === "aal2" &&
-      aal?.currentLevel !== "aal2"
-    ) {
-      return NextResponse.redirect(new URL("/twoauth", req.url));
+    requiresMFA = Boolean(
+      aal?.nextLevel === "aal2" && aal?.currentLevel !== "aal2",
+    );
+
+    if (requiresMFA && pathname !== "/twoauth") {
+      return redirectTo("/twoauth");
     }
   } catch {
-    // Si falla la comprobación AAL, seguir (evitar bloquear al usuario)
+    // Si falla la comprobación AAL, se conserva el acceso de una sesión válida.
   }
 
-  // US-04: Control de acceso por rol (RBAC) - Recuperar el rol del usuario autenticado
   const role = session.user.app_metadata?.role as number | undefined;
+  const dashboardPath = getDashboardPath(role);
 
-  // US-04: 🔒 SOLO ADMIN (rol 1) - Restringir el acceso a rutas administrativas
-  if (pathname.startsWith("/admin") && role !== 1) {
-    return NextResponse.redirect(new URL("/403", req.url));
+  if (pathname === "/twoauth") {
+    return requiresMFA ? res : redirectTo(dashboardPath ?? "/403");
   }
 
-  // US-04: 🔒 SOLO PROFESOR (rol 2) - Restringir el acceso a rutas del cuerpo docente
-  if (pathname.startsWith("/profesor") && role !== 2) {
-    return NextResponse.redirect(new URL("/403", req.url));
+  if (pathname === "/" || isAuthenticationPath(pathname)) {
+    return redirectTo(dashboardPath ?? "/403");
   }
 
-  // US-04: 🔒 SOLO ESTUDIANTE (rol 3) - Restringir el acceso a la zona de estudiantes
-  if (pathname.startsWith("/estudiante") && role !== 3) {
-    return NextResponse.redirect(new URL("/403", req.url));
+  if (isDashboardPath(pathname) && !canAccessDashboard(role, pathname)) {
+    return redirectTo("/403");
   }
 
   return res;
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/profesor/:path*", "/estudiante/:path*"],
+  matcher: ["/((?!_next/static|_next/image|api|brand/|favicon.ico|icon.jpeg).*)"],
 };

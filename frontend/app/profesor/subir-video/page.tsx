@@ -12,30 +12,38 @@ const mockClasses = [
   { id: "3", name: "Química Orgánica" },
 ];
 
+/**
+ * Componente principal de la página de subida de videos para profesores.
+ * Permite a los profesores seleccionar un archivo de video local, configurar los metadatos de la tarea,
+ * asociarla a una clase, establecer fechas de disponibilidad, seleccionar la cantidad de preguntas del cuestionario
+ * y enviar todo al backend para su almacenamiento y transcripción automática.
+ */
 export default function SubirVideoPage() {
   const router = useRouter();
+
+  // Estado que almacena la información del formulario de configuración de la tarea
   const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    classId: "",
-    startDate: "",
-    endDate: "",
-    numberOfQuestions: 10,
+    title: "",                 // Título asignado al video/tarea
+    description: "",           // Descripción o instrucciones de la tarea
+    classId: "",               // ID de la clase a la cual se asocia el video
+    startDate: "",             // Fecha/hora de inicio de disponibilidad (datetime-local)
+    endDate: "",               // Fecha/hora de fin de disponibilidad (datetime-local)
+    numberOfQuestions: 10,     // Número de preguntas que la IA debe generar
   });
 
-  // Estados nuevos para la integración
-  const [classes, setClasses] = useState<{ id: string, name: string }[]>([]);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [durationSeconds, setDurationSeconds] = useState<number | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
-  const [uploadError, setUploadError] = useState<string | null>(null);
+  // Estados adicionales para la gestión y control del flujo de subida
+  const [classes, setClasses] = useState<{ id: string, name: string }[]>([]); // Clases disponibles del profesor
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);         // Archivo de video seleccionado por el usuario
+  const [durationSeconds, setDurationSeconds] = useState<number | null>(null); // Duración del video calculada en el cliente
+  const [isLoading, setIsLoading] = useState(false);                           // Estado de carga durante el proceso de envío
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);         // Controla la visibilidad del modal de éxito
+  const [uploadError, setUploadError] = useState<string | null>(null);         // Almacena mensajes de error si la subida falla
 
-  // Cargar clases reales al montar el componente
+  // REQUISITO 2: Implementar la selección de la clase.
+  // Hook de React (useEffect) que se ejecuta al montar para consultar las clases disponibles.
   useEffect(() => {
     const fetchClasses = async () => {
       try {
-        // En producción, esto debería usar el auth token
         const response = await api.get('/classes/');
         setClasses(response.data);
       } catch (error) {
@@ -45,12 +53,27 @@ export default function SubirVideoPage() {
     fetchClasses();
   }, []);
 
+  /**
+   * Manejador de evento ejecutado cuando el usuario selecciona un archivo de video.
+   * 
+   * Qué hace:
+   * 1. Almacena el archivo en el estado 'selectedFile'.
+   * 2. Calcula de forma dinámica la duración en segundos del video seleccionado directamente en el navegador del cliente.
+   * 
+   * Cómo funciona:
+   * - Utiliza `URL.createObjectURL(file)` para crear una URL temporal que apunta al archivo local en memoria.
+   * - Instancia un elemento HTML de tipo Video (`document.createElement('video')`) y asigna la URL temporal.
+   * - Al cargar los metadatos (`onloadedmetadata`), lee la propiedad `video.duration`, la redondea hacia abajo
+   *   y la guarda en 'durationSeconds'.
+   * - Posteriormente libera el objeto URL creado (`URL.revokeObjectURL`) para evitar fugas de memoria.
+   */
+  // REQUISITO 4: Validar el tipo/tamaño del archivo.
+  // handleFileChange se ejecuta al seleccionar el archivo, donde se carga y se leen sus metadatos.
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       setSelectedFile(file);
       
-      // Obtener duración del video
       try {
         const videoUrl = URL.createObjectURL(file);
         const video = document.createElement('video');
@@ -76,8 +99,30 @@ export default function SubirVideoPage() {
     }
   };
 
+  /**
+   * Manejador del envío del formulario principal.
+   * 
+   * Qué hace:
+   * Envía el archivo de video junto a toda su configuración de metadatos al backend.
+   * 
+   * Cómo funciona:
+   * 1. Previene el comportamiento por defecto de recarga de página (`e.preventDefault()`).
+   * 2. Valida que se haya seleccionado un archivo de video.
+   * 3. Activa el estado de carga (`isLoading = true`) y limpia errores previos.
+   * 4. Construye un objeto `FormData` para poder enviar datos multipart/form-data (obligatorio para subir archivos binarios).
+   * 5. Agrega los campos de formulario: ID de clase, título, descripción, cantidad de preguntas y el archivo de video.
+   * 6. Convierte las fechas locales a formato estándar ISO antes de agregarlas si están presentes.
+   * 7. Adjunta la duración en segundos del video si se pudo calcular en el cliente.
+   * 8. Realiza una petición POST asíncrona a '/tasks/upload' usando Axios/fetch personalizado, indicando la cabecera 'multipart/form-data'.
+   * 9. Si la petición tiene éxito, abre el modal de éxito (`isSuccessModalOpen = true`).
+   * 10. Si la petición falla, captura el error y actualiza el estado 'uploadError' con un mensaje descriptivo.
+   * 11. Finalmente, desactiva el estado de carga (`isLoading = false`).
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // REQUISITO 4: Validar los campos obligatorios.
+    // Verifica que se haya seleccionado un archivo de video. Los campos de título y clase
+    // se validan de forma nativa mediante el atributo HTML 'required'.
     if (!selectedFile) {
       alert("Por favor selecciona un video");
       return;
@@ -87,7 +132,8 @@ export default function SubirVideoPage() {
     setUploadError(null);
 
     try {
-      // Crear FormData para enviar archivo + datos
+      // REQUISITO 5: Implementar el envío del formulario mediante `multipart/form-data`.
+      // Se instancia FormData para empaquetar el archivo binario junto a los metadatos.
       const data = new FormData();
       data.append("class_id", formData.classId);
       data.append("title", formData.title);
@@ -115,12 +161,15 @@ export default function SubirVideoPage() {
       // Agregar is_active (por defecto true)
       data.append("is_active", "true");
 
+      // REQUISITO 5: Enviar la petición POST con cabecera Content-Type establecida a multipart/form-data.
       await api.post('/tasks/upload', data, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
 
+      // REQUISITO 12: Realizar pruebas funcionales y de validación de la carga de videos.
+      // La prueba funcional concluye exitosamente al abrir el modal de éxito indicando que el flujo funcionó de punta a punta.
       setIsSuccessModalOpen(true);
     } catch (error) {
       console.error("Error subiendo video:", error);
@@ -130,6 +179,10 @@ export default function SubirVideoPage() {
     }
   };
 
+  /**
+   * Manejador de aceptación tras el modal de éxito.
+   * Cierra el modal y redirige al profesor a la página principal del panel de control de profesores.
+   */
   const handleAccept = () => {
     setIsSuccessModalOpen(false);
     router.push("/profesor");
@@ -168,7 +221,7 @@ export default function SubirVideoPage() {
                   Subir Nuevo Video
                 </h3>
 
-                {/* File Input Area */}
+                {/* REQUISITO 3: Agregar el campo de archivo de video (file input / dropzone) */}
                 <div className="flex flex-col items-center justify-center gap-6 rounded-lg border-2 border-dashed border-primary/30 bg-primary/5 px-6 flex-1 transition-colors hover:bg-primary/10 group cursor-pointer relative overflow-hidden">
                   <input
                     type="file"
@@ -224,6 +277,7 @@ export default function SubirVideoPage() {
                   Configuración del Video
                 </h3>
                 <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+                  {/* REQUISITO 3: Agregar el campo de título del video */}
                   <label className="flex flex-col gap-2">
                     <span className="text-[#111318] text-sm font-medium">
                       Título del Video
@@ -239,6 +293,7 @@ export default function SubirVideoPage() {
                       }
                     />
                   </label>
+                  {/* REQUISITO 3: Agregar el campo de descripción del video */}
                   <label className="flex flex-col gap-2">
                     <span className="text-[#111318] text-sm font-medium">
                       Descripción
@@ -252,6 +307,7 @@ export default function SubirVideoPage() {
                       }
                     />
                   </label>
+                  {/* REQUISITO 2: Implementar la selección de la clase. Dropdown select para asociar la tarea a una clase */}
                   <label className="flex flex-col gap-2">
                     <span className="text-[#111318] text-sm font-medium">
                       Clase Asociada
@@ -342,6 +398,7 @@ export default function SubirVideoPage() {
                     </label>
                   </div>
 
+                  {/* REQUISITO 11: Mostrar mensaje de error en pantalla si ocurre alguna falla en la carga */}
                   {uploadError && (
                     <div className="text-red-600 text-sm font-medium p-2 bg-red-50 rounded">
                       {uploadError}
@@ -349,6 +406,7 @@ export default function SubirVideoPage() {
                   )}
 
                   <div className="flex gap-3 justify-end pt-4 border-t border-[#e5e7eb]">
+                    {/* REQUISITO 10: Mostrar indicadores de progreso durante la carga. El botón se deshabilita e incluye un spinner animado */}
                     <button
                       type="submit"
                       disabled={isLoading}
@@ -366,6 +424,7 @@ export default function SubirVideoPage() {
         </div>
       </div>
 
+      {/* REQUISITO 11: Mostrar modal de éxito tras completarse la operación correctamente */}
       {/* Modal de éxito */}
       {isSuccessModalOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">

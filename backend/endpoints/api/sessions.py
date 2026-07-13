@@ -47,8 +47,10 @@ async def start_session(data: SessionStart, current_user: any = Depends(get_curr
             "task_id": data.task_id,
             # US-13: Asegurar la autoría vinculando únicamente el ID del usuario autenticado (current_user.id)
             "student_id": current_user.id,
+            # US-13: La sesión de visualización inicia en estado "started" listo para el monitoreo
             "status": "started"
         }
+        # US-13: Persistir el inicio de sesión en la base de datos Supabase (tabla activity_sessions)
         response = supabase.table("activity_sessions").insert(session_data).execute()
         return {"message": "Sesión iniciada", "session": response.data[0]}
     except Exception as e:

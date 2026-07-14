@@ -4,6 +4,7 @@ from types import SimpleNamespace
 
 os.environ.setdefault("SUPABASE_URL", "https://example.supabase.co")
 os.environ.setdefault("SUPABASE_KEY", "ci-placeholder")
+os.environ.setdefault("SUPABASE_SERVICE_ROLE_KEY", "")
 
 import pytest
 from fastapi import HTTPException, status
@@ -18,6 +19,9 @@ class FakeAdminAuth:
 
     def update_user_by_id(self, user_id, metadata):
         self.updated_users.append((user_id, metadata))
+
+    def delete_user(self, user_id):
+        self.deleted_user = user_id
 
 
 class FakeAuth:
@@ -99,12 +103,13 @@ def test_register_rejects_invalid_role():
         run_register(make_register_request(role=9))
 
     assert exc_info.value.status_code == status.HTTP_400_BAD_REQUEST
-    assert exc_info.value.detail == "El role debe ser 1, 2 o 3"
+    assert exc_info.value.detail == "El role de registro debe ser profesor (2) o estudiante (3)"
 
 
 def test_register_rejects_existing_email(monkeypatch):
     fake_supabase = FakeSupabase(profile_rows=[{"email": "estudiante@universidad.edu"}])
     monkeypatch.setattr(auth_module, "get_supabase_client", lambda: fake_supabase)
+    monkeypatch.setattr(auth_module, "get_supabase_admin_client", lambda: fake_supabase)
 
     with pytest.raises(HTTPException) as exc_info:
         run_register(make_register_request())
@@ -122,6 +127,7 @@ def test_register_creates_profile_and_enrolls_student(monkeypatch):
         ]
     )
     monkeypatch.setattr(auth_module, "get_supabase_client", lambda: fake_supabase)
+    monkeypatch.setattr(auth_module, "get_supabase_admin_client", lambda: fake_supabase)
 
     response = run_register(make_register_request(role=3))
 
@@ -134,7 +140,12 @@ def test_register_creates_profile_and_enrolls_student(monkeypatch):
     assert fake_supabase.auth.sign_up_payload == {
         "email": "estudiante@universidad.edu",
         "password": "segura123",
-        "options": {"data": {"full_name": "Estudiante Demo"}},
+        "options": {
+            "data": {
+                "full_name": "Estudiante Demo",
+                "requested_role": 3,
+            }
+        },
     }
     assert ("user-123", {"app_metadata": {"role": 3}}) in fake_supabase.auth.admin.updated_users
     assert (
@@ -155,6 +166,30 @@ def test_register_creates_profile_and_enrolls_student(monkeypatch):
             {"class_id": "class-2", "student_id": "user-123", "estado": 1},
         ],
     ) in fake_supabase.upserts
+
+
+def test_register_sends_professor_role_to_supabase(monkeypatch):
+    fake_supabase = FakeSupabase()
+    monkeypatch.setattr(auth_module, "get_supabase_client", lambda: fake_supabase)
+    monkeypatch.setattr(auth_module, "get_supabase_admin_client", lambda: fake_supabase)
+
+    response = run_register(make_register_request(role=2))
+
+    assert response.user.role == 2
+    assert fake_supabase.auth.sign_up_payload["options"]["data"]["requested_role"] == 2
+    assert ("user-123", {"app_metadata": {"role": 2}}) in fake_supabase.auth.admin.updated_users
+
+
+def test_register_uses_confirmation_trigger_without_admin_key(monkeypatch):
+    fake_supabase = FakeSupabase()
+    monkeypatch.setattr(auth_module, "get_supabase_client", lambda: fake_supabase)
+    monkeypatch.setattr(auth_module, "get_supabase_admin_client", lambda: None)
+
+    response = run_register(make_register_request(role=3))
+
+    assert response.user.role == 3
+    assert fake_supabase.auth.sign_up_payload["options"]["data"]["requested_role"] == 3
+    assert fake_supabase.upserts == []
 
 
 def test_login_schema_contract():

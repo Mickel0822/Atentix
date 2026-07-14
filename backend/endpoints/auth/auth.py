@@ -9,7 +9,7 @@ from models.schemas import (
     RegisterResponse,
     UserResponse,
 )
-from utils.supabase_client import get_supabase_client
+from utils.supabase_client import get_supabase_admin_client, get_supabase_client
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -29,13 +29,14 @@ async def register(request: RegisterRequest):
         HTTPException: Si el usuario ya existe, datos inválidos, o error en la creación
     """
     # Validar el rol antes de tocar Supabase.
-    if request.role not in [1, 2, 3]:
+    if request.role not in [2, 3]:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="El role debe ser 1, 2 o 3"
+            detail="El role de registro debe ser profesor (2) o estudiante (3)"
         )
     
     supabase: Client = get_supabase_client()
+    admin_supabase = get_supabase_admin_client()
     
     try:
         # Se valida profiles como resguardo adicional para evitar duplicados.
@@ -53,7 +54,8 @@ async def register(request: RegisterRequest):
             "password": request.password,
             "options": {
                 "data": {
-                    "full_name": request.full_name
+                    "full_name": request.full_name,
+                    "requested_role": request.role
                 }
             }
         })
@@ -66,8 +68,8 @@ async def register(request: RegisterRequest):
         
         user_id = auth_response.user.id
         
-        # Se crea el perfil de forma explícita para no depender solo de triggers.
-        try:
+        # Con credenciales administrativas se persiste el rol de inmediato.
+        if admin_supabase:
             profile_data = {
                 "user_id": user_id,
                 "full_name": request.full_name,
@@ -76,30 +78,30 @@ async def register(request: RegisterRequest):
                 "is_active": True,
                 "ctr_estado": 1
             }
-            # El upsert mantiene consistencia si el trigger ya generó el registro.
-            supabase.table("profiles").upsert(profile_data).execute()
-            print(f"[Register] ✅ Perfil creado explícitamente para {user_id}")
-        except Exception as profile_error:
-            print(f"[Register] ⚠️ Error creando perfil explícitamente: {profile_error}")
-            # No bloqueamos el flujo, pero lo logueamos. Si falla por FK, los siguientes pasos fallarán.
-
-        # Se intenta reflejar el rol en app_metadata cuando la clave lo permite.
-        try:
-            if hasattr(supabase.auth, 'admin') and supabase.auth.admin:
-                supabase.auth.admin.update_user_by_id(
+            try:
+                admin_supabase.auth.admin.update_user_by_id(
                     user_id,
                     {"app_metadata": {"role": request.role}}
                 )
-                print(f"[Register] ✅ Role {request.role} asignado vía Admin API")
-            else:
-                print("[Register] ⚠️ No se pudo asignar role: La clave de Supabase no tiene permisos de Admin (Service Role)")
-        except Exception as metadata_error:
-            print(f"[Register] ⚠️ Falló actualización de app_metadata: {metadata_error}")
+                admin_supabase.table("profiles").upsert(profile_data).execute()
+                print(f"[Register] ✅ Perfil y role {request.role} sincronizados para {user_id}")
+            except Exception as registration_error:
+                try:
+                    admin_supabase.auth.admin.delete_user(user_id)
+                except Exception as cleanup_error:
+                    print(f"[Register] ⚠️ No se pudo revertir el usuario {user_id}: {cleanup_error}")
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="No se pudo completar la configuración del usuario"
+                ) from registration_error
+        else:
+            print("[Register] ℹ️ Rol delegado al trigger seguro de confirmación")
         
         # Los estudiantes quedan matriculados en las clases activas disponibles.
         if request.role == 3:  # Estudiante
             try:
-                all_classes = supabase.table("classes") \
+                data_client = admin_supabase or supabase
+                all_classes = data_client.table("classes") \
                     .select("id") \
                     .eq("ctr_esatdo", 1) \
                     .eq("is_active", True) \
@@ -110,7 +112,7 @@ async def register(request: RegisterRequest):
                         {"class_id": cls["id"], "student_id": user_id, "estado": 1}
                         for cls in all_classes.data
                     ]
-                    supabase.table("class_enrollments").upsert(enrollments).execute()
+                    data_client.table("class_enrollments").upsert(enrollments).execute()
                     print(f"[Register] ✅ Estudiante auto-matriculado en {len(enrollments)} clases")
             except Exception as enroll_error:
                 print(f"[Register] ⚠️ Error en auto-matrícula: {enroll_error}")

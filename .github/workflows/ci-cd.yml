@@ -71,6 +71,7 @@ jobs:
       PYTHONPATH: ${{ github.workspace }}/backend
       SUPABASE_URL: https://example.supabase.co
       SUPABASE_KEY: ci-placeholder
+      SUPABASE_SERVICE_ROLE_KEY: ""
       GEMINI_API_KEY: ci-placeholder
     steps:
       - name: Checkout repository

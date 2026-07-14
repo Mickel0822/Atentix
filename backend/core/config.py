@@ -58,6 +58,7 @@ class Settings(BaseSettings):
     # Configuración de Supabase
     supabase_url: str
     supabase_key: str
+    supabase_service_role_key: str = ""
 
     # Configuración de IA (Gemini)
     gemini_api_key: str = ""

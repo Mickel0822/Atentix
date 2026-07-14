@@ -45,7 +45,7 @@ export default function CrearClasePage() {
                 title="Crear Nueva Clase"
                 subtitle="Configura una nueva asignatura"
             />
-            <div className="p-6 md:p-8 max-w-3xl mx-auto w-full">
+            <div className="mx-auto w-full max-w-3xl p-4 sm:p-6 md:p-8">
                 <div className="bg-white rounded-xl shadow-sm border border-[#e5e7eb] p-8">
                     <h2 className="text-xl font-bold text-[#111318] mb-6">Detalles de la Clase</h2>
 

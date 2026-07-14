@@ -34,7 +34,7 @@ export default function AdminDashboard() {
         title="Bienvenido, Administrador"
         subtitle="Resumen de actividad del día"
       />
-      <div className="p-6 md:p-8 max-w-7xl mx-auto w-full flex flex-col gap-8">
+      <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 p-4 sm:p-6 md:gap-8 md:p-8">
         {/* Stats Grid */}
         <section aria-label="Statistics">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

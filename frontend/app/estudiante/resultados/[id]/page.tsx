@@ -93,7 +93,7 @@ export default function ResultadosClasePage() {
                     role: "Estudiante",
                 }}
             />
-            <div className="p-6 md:p-8 max-w-7xl mx-auto w-full flex flex-col gap-6">
+            <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 p-4 sm:p-6 md:p-8">
                 {/* Back Button */}
                 <button
                     onClick={() => router.back()}

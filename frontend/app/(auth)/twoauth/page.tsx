@@ -151,7 +151,7 @@ function TwoAuthForm() {
   };
 
   return (
-    <div className="bg-background-light min-h-screen h-screen flex flex-col md:flex-row font-display text-slate-900 selection:bg-primary/30 antialiased overflow-hidden">
+    <div className="font-display flex min-h-dvh flex-col bg-background-light text-slate-900 antialiased selection:bg-primary/30 md:h-screen md:flex-row md:overflow-hidden">
       {/* Left Section: Visual/Hero */}
       <div className="relative hidden md:flex md:w-1/2 lg:w-5/12 xl:w-1/3 flex-col justify-between bg-primary overflow-hidden">
         {/* Background Image */}
@@ -207,14 +207,14 @@ function TwoAuthForm() {
         </div>
       </div>
       {/* Right Section: 2FA Form */}
-      <div className="flex-1 flex items-center justify-center p-6 md:p-12 relative overflow-y-auto h-full">
+      <div className="relative flex flex-1 items-center justify-center overflow-y-auto px-4 py-8 sm:p-6 md:h-full md:p-12">
         {/* Mobile Header (Logo) */}
-        <BrandLogo className="md:hidden absolute top-6 left-6" />
-        <div className="w-full max-w-[480px] flex flex-col items-center justify-center">
+        <div className="flex w-full max-w-[480px] flex-col items-center justify-center gap-6">
+          <BrandLogo className="justify-center md:hidden" size="large" />
           <div className="relative w-full bg-white rounded-xl shadow-xl overflow-hidden border border-slate-200">
             <div className="absolute top-0 left-0 right-0 h-1.5 bg-primary"></div>
             <form
-              className="flex flex-col items-center p-8 md:p-10 pt-12"
+              className="flex flex-col items-center px-4 pb-7 pt-10 sm:p-8 sm:pt-12 md:p-10"
               onSubmit={handleSubmit}
             >
               <div className="mb-6 flex items-center justify-center size-16 rounded-full bg-primary/10 text-primary">
@@ -259,14 +259,14 @@ function TwoAuthForm() {
               {!isLoadingFactor && (
                 <>
                   <div className="flex justify-center w-full mb-8">
-                    <fieldset className="flex gap-2 sm:gap-3">
+                    <fieldset className="flex gap-1.5 min-[380px]:gap-2 sm:gap-3">
                       {codes.map((code, index) => (
                         <input
                           key={index}
                           ref={(el) => {
                             inputRefs.current[index] = el;
                           }}
-                          className="flex h-12 w-10 sm:h-14 sm:w-12 text-center bg-slate-50 border-b-2 border-slate-300 rounded-t-md focus:border-primary focus:bg-white focus:outline-none text-xl sm:text-2xl font-bold transition-all caret-primary text-slate-900"
+                          className="flex h-12 w-9 min-[380px]:w-10 sm:h-14 sm:w-12 text-center bg-slate-50 border-b-2 border-slate-300 rounded-t-md focus:border-primary focus:bg-white focus:outline-none text-xl sm:text-2xl font-bold transition-all caret-primary text-slate-900"
                           inputMode="numeric"
                           maxLength={1}
                           type="text"

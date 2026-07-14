@@ -37,7 +37,7 @@ export default function ResultadosPage() {
         }}
       />
 
-      <div className="p-6 md:p-8 max-w-7xl mx-auto w-full flex flex-col gap-8">
+      <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 p-4 sm:p-6 md:gap-8 md:p-8">
         {/* Header */}
         <div className="flex flex-col gap-1">
           <h1 className="text-2xl font-bold text-[#111318]">Resultados</h1>
@@ -49,9 +49,9 @@ export default function ResultadosPage() {
         {/* Classes Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {loading ? (
-            <div className="col-span-3 text-center py-10 text-gray-500">Cargando clases...</div>
+            <div className="col-span-full py-10 text-center text-gray-500">Cargando clases...</div>
           ) : classes.length === 0 ? (
-            <div className="col-span-3 text-center py-10 text-gray-500 border border-dashed rounded-xl">
+            <div className="col-span-full rounded-xl border border-dashed py-10 text-center text-gray-500">
               No tienes clases con resultados disponibles.
             </div>
           ) : (

@@ -98,7 +98,7 @@ export default function RegistroPage() {
         onClose={() => setIsAlertOpen(false)}
         duration={alertType === "success" ? 2000 : 5000}
       />
-      <div className="bg-background-light font-display antialiased text-slate-900 min-h-screen h-screen flex flex-col md:flex-row overflow-hidden">
+      <div className="font-display flex min-h-dvh flex-col bg-background-light text-slate-900 antialiased md:h-screen md:flex-row md:overflow-hidden">
         {/* Left Section: Visual/Hero */}
         <div className="relative hidden md:flex md:w-1/2 lg:w-5/12 xl:w-1/3 flex-col justify-between bg-primary overflow-hidden">
           {/* Background Image */}
@@ -155,10 +155,10 @@ export default function RegistroPage() {
           </div>
         </div>
         {/* Right Section: Registration Form */}
-        <div className="flex-1 flex items-center justify-center p-6 md:p-12 relative overflow-y-auto h-full">
+        <div className="relative flex flex-1 items-center justify-center overflow-y-auto px-4 py-8 sm:p-6 md:h-full md:p-12">
           {/* Mobile Header (Logo) */}
-          <BrandLogo className="md:hidden absolute top-6 left-6" />
-          <div className="w-full max-w-[440px] flex flex-col gap-8">
+          <div className="flex w-full max-w-[440px] flex-col gap-6 sm:gap-8">
+            <BrandLogo className="mb-2 justify-center md:hidden" size="large" />
             {/* Form Header */}
             <div className="text-center md:text-left">
               <h1 className="text-3xl md:text-4xl font-bold text-slate-900 tracking-tight mb-3">
@@ -181,7 +181,7 @@ export default function RegistroPage() {
                 <label className="text-sm font-medium text-slate-700">
                   Soy un:
                 </label>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-3 sm:gap-4">
                   <label className="cursor-pointer relative">
                     <input
                       className="peer sr-only"
@@ -193,7 +193,7 @@ export default function RegistroPage() {
                         setRole(e.target.value as "student" | "professor")
                       }
                     />
-                    <div className="flex flex-col items-center justify-center p-4 rounded-lg border-2 border-slate-200 bg-white hover:border-primary/50 transition-all peer-checked:border-primary peer-checked:bg-primary/5">
+                    <div className="flex min-h-28 flex-col items-center justify-center rounded-lg border-2 border-slate-200 bg-white p-3 transition-all hover:border-primary/50 peer-checked:border-primary peer-checked:bg-primary/5 sm:p-4">
                       <div className="size-10 rounded-full bg-blue-50 flex items-center justify-center mb-2 peer-checked:bg-primary peer-checked:text-white text-primary transition-colors">
                         <span className="material-symbols-outlined text-2xl">
                           school
@@ -220,7 +220,7 @@ export default function RegistroPage() {
                         setRole(e.target.value as "student" | "professor")
                       }
                     />
-                    <div className="flex flex-col items-center justify-center p-4 rounded-lg border-2 border-slate-200 bg-white hover:border-primary/50 transition-all peer-checked:border-primary peer-checked:bg-primary/5">
+                    <div className="flex min-h-28 flex-col items-center justify-center rounded-lg border-2 border-slate-200 bg-white p-3 transition-all hover:border-primary/50 peer-checked:border-primary peer-checked:bg-primary/5 sm:p-4">
                       <div className="size-10 rounded-full bg-purple-50 flex items-center justify-center mb-2 peer-checked:bg-primary peer-checked:text-white text-purple-600 transition-colors">
                         <span className="material-symbols-outlined text-2xl">
                           cast_for_education

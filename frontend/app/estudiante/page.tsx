@@ -58,7 +58,7 @@ export default function EstudianteDashboard() {
         title="Dashboard"
         subtitle="Resumen de tu actividad académica"
       />
-      <div className="p-6 md:p-8 max-w-7xl mx-auto w-full flex flex-col gap-8">
+      <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 p-4 sm:p-6 md:gap-8 md:p-8">
         {/* Greeting */}
         <div className="flex flex-col gap-1">
           <h1 className="text-3xl font-bold text-[#111318]">
@@ -135,7 +135,7 @@ export default function EstudianteDashboard() {
                   </Link>
                 ))}
                 {classes.length === 0 && (
-                  <div className="col-span-2 p-8 text-center bg-gray-50 rounded-xl border border-dashed">
+                  <div className="col-span-full rounded-xl border border-dashed bg-gray-50 p-8 text-center">
                     <p className="text-gray-500">No hay clases disponibles en este momento.</p>
                   </div>
                 )}

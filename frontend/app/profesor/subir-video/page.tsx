@@ -199,7 +199,7 @@ export default function SubirVideoPage() {
           role: "Profesor",
         }}
       />
-      <div className="p-6 md:p-8 max-w-7xl mx-auto w-full flex flex-col gap-8">
+      <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 p-4 sm:p-6 md:gap-8 md:p-8">
         <div className="flex flex-col gap-6">
           {/* Nota informativa */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start gap-3">

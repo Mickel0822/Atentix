@@ -277,7 +277,7 @@ export default function VideoPlayer({
   return (
     <div
       id="video-container"
-      className="flex-1 flex flex-col relative bg-black justify-center items-center group/player"
+      className="group/player relative flex h-full min-h-0 flex-1 flex-col items-center justify-center bg-black"
       onMouseEnter={() => {
         setShowControls(true);
         // Limpiar timer si existe
@@ -316,7 +316,7 @@ export default function VideoPlayer({
         />
 
         {/* Attention Level Indicator */}
-        <div className="absolute top-4 right-4 z-30 flex flex-col gap-2">
+        <div className="absolute right-2 top-2 z-30 flex max-w-[55%] flex-col items-end gap-1.5 sm:right-4 sm:top-4 sm:max-w-none sm:gap-2">
           <div
             className={`px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all duration-300 ${attentionLevel === "Alto"
               ? "bg-green-100 text-green-700 border border-green-200"
@@ -337,7 +337,7 @@ export default function VideoPlayer({
 
           {/* Mensaje dinámico */}
           <div
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium bg-black/70 text-white backdrop-blur-sm transition-all duration-300`}
+            className="hidden rounded-lg bg-black/70 px-3 py-1.5 text-xs font-medium text-white backdrop-blur-sm transition-all duration-300 min-[430px]:block"
           >
             {attentionMessage}
           </div>
@@ -346,12 +346,12 @@ export default function VideoPlayer({
         {/* Alerta de baja atención - Overlay animado */}
         {showAttentionAlert && isPlaying && (
           <div className="absolute inset-0 z-40 flex items-center justify-center pointer-events-none">
-            <div className="animate-pulse bg-red-500/20 rounded-2xl p-8 backdrop-blur-sm border-2 border-red-500/50">
+            <div className="animate-pulse rounded-2xl border-2 border-red-500/50 bg-red-500/20 p-4 backdrop-blur-sm sm:p-8">
               <div className="flex flex-col items-center gap-3">
-                <span className="material-symbols-outlined text-5xl text-red-500 animate-bounce">
+                <span className="material-symbols-outlined animate-bounce text-4xl text-red-500 sm:text-5xl">
                   warning
                 </span>
-                <p className="text-xl font-bold text-white text-center drop-shadow-lg">
+                <p className="text-center text-base font-bold text-white drop-shadow-lg sm:text-xl">
                   ¡Atención requerida!
                 </p>
                 <p className="text-sm text-white/80 text-center">
@@ -364,11 +364,11 @@ export default function VideoPlayer({
 
         {/* Video Controls Overlay */}
         <div
-          className={`absolute inset-0 bg-gradient-to-t from-black/80 via-black/0 to-black/60 transition-opacity duration-300 flex flex-col justify-end p-6 z-10 ${showControls || !isPlaying ? "opacity-100" : "opacity-0"
+          className={`absolute inset-0 z-10 flex flex-col justify-end bg-gradient-to-t from-black/80 via-black/0 to-black/60 p-3 transition-opacity duration-300 sm:p-6 ${showControls || !isPlaying ? "opacity-100" : "opacity-0"
             }`}
         >
           {/* Progress Bar */}
-          <div className="w-full h-1.5 bg-white/20 rounded-full mb-4 cursor-pointer relative group/progress">
+          <div className="group/progress relative mb-2 h-2 w-full cursor-pointer rounded-full bg-white/20 sm:mb-4 sm:h-1.5">
             <div
               className="absolute top-0 left-0 h-full bg-primary rounded-full relative"
               style={{
@@ -389,11 +389,11 @@ export default function VideoPlayer({
           </div>
 
           {/* Controls Row */}
-          <div className="flex items-center justify-between text-white">
-            <div className="flex items-center gap-6">
+          <div className="flex items-center justify-between gap-2 text-white">
+            <div className="flex min-w-0 items-center gap-2 sm:gap-6">
               <button
                 onClick={handlePlayPause}
-                className="hover:text-primary transition-colors"
+                className="flex size-11 shrink-0 items-center justify-center transition-colors hover:text-primary"
                 disabled={!faceDetected && !isPlaying}
                 title={!faceDetected && !isPlaying ? "Persona ausente - Vuelve a la cámara" : ""}
               >
@@ -404,8 +404,8 @@ export default function VideoPlayer({
                   {isPlaying ? "pause_circle" : "play_circle"}
                 </span>
               </button>
-              <div className="flex items-center gap-2 group/volume">
-                <button className="hover:text-primary transition-colors">
+              <div className="group/volume hidden items-center gap-2 min-[390px]:flex">
+                <button className="flex size-11 items-center justify-center transition-colors hover:text-primary" aria-label="Volumen">
                   <span
                     className="material-symbols-outlined"
                     style={{ fontSize: "24px" }}
@@ -413,7 +413,7 @@ export default function VideoPlayer({
                     {volume > 0 ? "volume_up" : "volume_off"}
                   </span>
                 </button>
-                <div className="w-0 overflow-hidden group-hover/volume:w-20 transition-all duration-300 ease-out">
+                <div className="hidden w-0 overflow-hidden transition-all duration-300 ease-out group-hover/volume:w-20 sm:block">
                   <input
                     type="range"
                     min="0"
@@ -425,11 +425,11 @@ export default function VideoPlayer({
                   />
                 </div>
               </div>
-              <span className="text-sm font-medium tracking-wide">
+              <span className="whitespace-nowrap text-xs font-medium tracking-wide sm:text-sm">
                 {formatTime(currentTime)} / {formatTime(duration)}
               </span>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex shrink-0 items-center gap-1 sm:gap-4">
               {/* Velocidad controlada automáticamente por atención */}
               <span
                 className="px-2 py-1 bg-white/10 rounded text-xs font-bold tracking-wider"
@@ -437,7 +437,7 @@ export default function VideoPlayer({
               >
                 {playbackRate}x
               </span>
-              <button className="hover:text-primary transition-colors">
+              <button className="hidden size-11 items-center justify-center transition-colors hover:text-primary sm:flex" aria-label="Subtítulos">
                 <span
                   className="material-symbols-outlined"
                   style={{ fontSize: "24px" }}
@@ -447,7 +447,8 @@ export default function VideoPlayer({
               </button>
               <button
                 onClick={handleFullscreen}
-                className="hover:text-primary transition-colors"
+                className="flex size-11 items-center justify-center transition-colors hover:text-primary"
+                aria-label="Pantalla completa"
               >
                 <span
                   className="material-symbols-outlined"

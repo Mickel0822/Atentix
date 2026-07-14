@@ -211,9 +211,9 @@ export default function UsuariosPage() {
         title="Gestión de Usuarios"
         subtitle="Administra el acceso y los roles de los usuarios de la plataforma"
       />
-      <div className="p-6 md:p-8 max-w-7xl mx-auto w-full flex flex-col gap-6">
+      <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 p-4 sm:p-6 md:p-8">
         {/* Page Heading */}
-        <div className="flex flex-wrap justify-between items-center gap-4">
+        <div className="flex flex-col items-stretch justify-between gap-4 sm:flex-row sm:flex-wrap sm:items-center">
           <div className="flex flex-col gap-2">
             <h1 className="text-[#111318] text-2xl md:text-3xl font-bold leading-tight tracking-tight">
               Gestión de Usuarios
@@ -225,7 +225,7 @@ export default function UsuariosPage() {
           </div>
           <button
             onClick={() => setIsAddModalOpen(true)}
-            className="flex items-center justify-center gap-2 rounded-lg h-11 px-5 bg-primary hover:bg-blue-700 text-white text-sm font-bold leading-normal tracking-[0.015em] transition-colors shadow-sm shadow-blue-200"
+            className="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary px-5 text-sm font-bold leading-normal tracking-[0.015em] text-white shadow-sm shadow-blue-200 transition-colors hover:bg-blue-700 sm:w-auto"
           >
             <span className="material-symbols-outlined text-[20px]">add</span>
             <span className="truncate">Añadir Nuevo Usuario</span>
@@ -254,7 +254,7 @@ export default function UsuariosPage() {
           </div>
 
           {/* Chips / Filters */}
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 sm:flex sm:flex-wrap sm:items-center">
             <div className="relative group">
               <select
                 className="flex h-10 items-center justify-between gap-x-2 rounded-lg bg-[#f0f2f4] hover:bg-[#e5e7eb] px-4 transition-colors min-w-[140px] text-[#111318] text-sm font-medium"

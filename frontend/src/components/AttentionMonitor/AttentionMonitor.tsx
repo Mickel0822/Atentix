@@ -246,7 +246,7 @@ export function AttentionMonitor({
                 )}
 
                 {/* Indicador de estado de conexión */}
-                <div className="absolute top-3 right-3 flex items-center gap-2">
+                <div className="absolute right-2 top-2 flex items-center gap-1.5 sm:right-3 sm:top-3 sm:gap-2">
                     <div className={`w-3 h-3 rounded-full ${isConnected ? "bg-green-500" :
                         connectionStatus === "connecting" ? "bg-yellow-500 animate-pulse" :
                             "bg-red-500"
@@ -267,12 +267,12 @@ export function AttentionMonitor({
             </div>
 
             {/* Panel de métricas */}
-            <div className="mt-4 p-4 bg-gray-800 rounded-lg">
+            <div className="mt-2 rounded-lg bg-gray-800 p-3 sm:mt-4 sm:p-4">
                 {/* US-10: Representar visualmente el nivel de atención recibido en tiempo real. */}
                 <EngagementBar score={attentionScore} />
 
                 {/* Estado */}
-                <div className="mt-3 flex items-center justify-between">
+                <div className="mt-2 flex items-center justify-between sm:mt-3">
                     <span className="text-sm text-gray-400">Estado:</span>
                     <span className={`text-sm font-semibold ${status === "engaged" ? "text-green-400" :
                         status === "distracted" ? "text-red-400" :

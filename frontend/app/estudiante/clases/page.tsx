@@ -53,9 +53,9 @@ export default function MisClasesPage() {
         title="Mis Clases"
         subtitle="Selecciona una clase para ver sus videos"
       />
-      <div className="p-6 md:p-8 max-w-7xl mx-auto w-full flex flex-col gap-8">
+      <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 p-4 sm:p-6 md:gap-8 md:p-8">
         {/* Header Actions */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col items-stretch justify-between gap-4 sm:flex-row sm:items-center">
           <div className="flex flex-col gap-1">
             <h1 className="text-2xl font-bold text-[#111318]">Mis Clases</h1>
             <p className="text-[#616f89]">
@@ -64,7 +64,7 @@ export default function MisClasesPage() {
           </div>
           <button
             onClick={() => setIsJoinModalOpen(true)}
-            className="bg-primary hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors shadow-lg shadow-primary/30"
+            className="flex min-h-11 items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white shadow-lg shadow-primary/30 transition-colors hover:bg-blue-700"
           >
             <span className="material-symbols-outlined text-lg">add</span>
             <span>Unirse a Clase</span>
@@ -74,9 +74,9 @@ export default function MisClasesPage() {
         {/* Classes Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {loading ? (
-            <div className="col-span-3 text-center py-10 text-gray-500">Cargando clases...</div>
+            <div className="col-span-full py-10 text-center text-gray-500">Cargando clases...</div>
           ) : classes.length === 0 ? (
-            <div className="col-span-3 text-center py-10 text-gray-500 border border-dashed rounded-xl">
+            <div className="col-span-full rounded-xl border border-dashed py-10 text-center text-gray-500">
               No estás inscrito en ninguna clase aún. Usa el botón "Unirse a Clase" para agregar una.
             </div>
           ) : (

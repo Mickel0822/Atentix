@@ -56,7 +56,7 @@ export default function ProfesorDashboard() {
         }
         subtitle="Resumen de actividad académica"
       />
-      <div className="p-6 md:p-8 max-w-7xl mx-auto w-full flex flex-col gap-8">
+      <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 p-4 sm:p-6 md:gap-8 md:p-8">
 
         {/* AT-21: Grid de Indicadores Clave - Mapea y renderiza las estadísticas globales obtenidas de la API */}
         <section aria-label="Estadísticas">
@@ -143,7 +143,7 @@ export default function ProfesorDashboard() {
                 </div>
               ))}
               {classes.length === 0 && (
-                <div className="col-span-2 p-10 bg-gray-50 rounded-xl border border-dashed border-gray-300 text-center">
+                <div className="col-span-full rounded-xl border border-dashed border-gray-300 bg-gray-50 p-8 text-center sm:p-10">
                   <p className="text-gray-500 mb-4">No tienes clases creadas.</p>
                   <Link href="/profesor/crear-clase" className="text-primary font-medium hover:underline">Crear mi primera clase</Link>
                 </div>

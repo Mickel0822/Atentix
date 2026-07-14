@@ -280,27 +280,28 @@ export default function VerVideoPage() {
   }
 
   return (
-    <div className="flex flex-col h-screen w-full overflow-hidden bg-background-light text-[#111318]">
+    <div className="flex min-h-dvh w-full flex-col bg-background-light text-[#111318] md:h-screen md:overflow-hidden">
       {/* Header */}
-      <header className="flex items-center justify-between border-b border-[#e5e7eb] px-6 py-3 bg-white z-20 h-16 shrink-0">
-        <div className="flex items-center gap-4">
-          <button onClick={() => router.back()} className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-100 text-[#616f89]">
+      <header className="mobile-safe-top sticky top-0 z-30 flex min-h-16 shrink-0 items-center justify-between border-b border-[#e5e7eb] bg-white px-3 py-2 sm:px-6 md:static md:h-16 md:py-3">
+        <div className="flex min-w-0 items-center gap-2 sm:gap-4">
+          <button onClick={() => router.back()} className="flex size-11 shrink-0 items-center justify-center rounded-full text-[#616f89] hover:bg-gray-100" aria-label="Volver">
             <span className="material-symbols-outlined">arrow_back</span>
           </button>
-          <h2 className="text-base font-bold text-[#111318]">{videoData.title}</h2>
+          <h2 className="truncate text-sm font-bold text-[#111318] sm:text-base">{videoData.title}</h2>
         </div>
-        <div className="flex items-center gap-4">
-          <button onClick={() => router.push(`/estudiante/clases/${classId}/videos`)} className="text-[#616f89] hover:bg-gray-100 p-2 rounded-full">
+        <div className="flex shrink-0 items-center">
+          <button onClick={() => router.push(`/estudiante/clases/${classId}/videos`)} className="flex size-11 items-center justify-center rounded-full text-[#616f89] hover:bg-gray-100" aria-label="Cerrar video">
             <span className="material-symbols-outlined">close</span>
           </button>
         </div>
       </header>
 
       {/* Main Layout */}
-      <main className="flex-1 flex overflow-hidden relative">
+      <main className="relative flex flex-1 flex-col overflow-y-auto md:min-h-0 md:flex-row md:overflow-hidden">
 
         {/* Video Player */}
-        <VideoPlayer
+        <section className="order-2 aspect-video w-full shrink-0 bg-black md:order-1 md:min-h-0 md:min-w-0 md:flex-1 md:self-stretch">
+          <VideoPlayer
           videoUrl={videoData.videoUrl}
           attentionLevel={attentionLevel}
           faceDetected={faceDetected}
@@ -310,12 +311,13 @@ export default function VerVideoPage() {
           onPlayStart={handlePlayStart}
           onPlayingChange={handlePlayingChange}
           onDurationChange={setVideoDuration}
-        />
+          />
+        </section>
 
         {/* Sidebar */}
-        <aside className="w-80 bg-white border-l border-[#e5e7eb] flex flex-col shrink-0 z-20 h-full overflow-y-auto">
+        <aside className="order-1 z-20 flex w-full shrink-0 flex-col border-b border-[#e5e7eb] bg-white md:order-2 md:h-full md:w-80 md:overflow-y-auto md:border-b-0 md:border-l">
           {/* Monitor de Atención Integrado */}
-          <div className="p-4 border-b border-[#e5e7eb]">
+          <div className="border-b border-[#e5e7eb] p-3 sm:p-4">
             <h3 className="text-xs font-bold text-gray-500 uppercase mb-2">Monitor de Atención</h3>
             {videoFinished ? (
               <div className="w-full aspect-video bg-gray-100 rounded-lg flex items-center justify-center">
@@ -331,7 +333,7 @@ export default function VerVideoPage() {
           </div>
 
           {/* Info Video */}
-          <div className="p-4 flex-1">
+          <div className="hidden flex-1 p-4 md:block">
             <h3 className="text-lg font-bold mb-2">{videoData.title}</h3>
             <p className="text-sm text-gray-600 mb-4">{videoData.description}</p>
 

@@ -182,7 +182,7 @@ export default function LoginPage() {
         onClose={() => setIsAlertOpen(false)}
         duration={alertType === "success" ? 2000 : 5000}
       />
-      <div className="font-display bg-background-light text-slate-900 min-h-screen h-screen flex flex-col md:flex-row antialiased overflow-hidden">
+      <div className="font-display flex min-h-dvh flex-col bg-background-light text-slate-900 antialiased md:h-screen md:flex-row md:overflow-hidden">
         {/* Left Section: Visual/Hero */}
         <div className="relative hidden md:flex md:w-1/2 lg:w-5/12 xl:w-1/3 flex-col justify-between bg-primary overflow-hidden">
           {/* Background Image */}
@@ -239,10 +239,10 @@ export default function LoginPage() {
           </div>
         </div>
         {/* Right Section: Login Form */}
-        <div className="flex-1 flex items-center justify-center p-6 md:p-12 relative overflow-y-auto h-full">
-          <div className="w-full max-w-[440px] flex flex-col gap-8">
+        <div className="relative flex flex-1 items-center justify-center overflow-y-auto px-4 py-8 sm:p-6 md:h-full md:p-12">
+          <div className="flex w-full max-w-[440px] flex-col gap-6 sm:gap-8">
             {/* Mobile Header (Logo) */}
-            <BrandLogo className="md:hidden mb-4" />
+            <BrandLogo className="mb-2 justify-center md:hidden" size="large" />
             {/* Form Header */}
             <div className="text-center md:text-left">
               <h1 className="text-3xl md:text-4xl font-bold text-slate-900 tracking-tight mb-3">

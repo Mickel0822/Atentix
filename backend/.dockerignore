@@ -24,4 +24,3 @@ install_ffmpeg.ps1
 verify_deployment.py
 render.yaml
 temp_uploads/
-models/*.pkl

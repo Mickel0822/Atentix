@@ -1,4 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
+import { buildWebSocketUrl } from '@/services/websocket/config/config';
 
 
 interface VideoCanvasBlinkProps {
@@ -46,7 +47,7 @@ const VideoCanvasBlink: React.FC<VideoCanvasBlinkProps> = ({
             }
 
             // Conectar WS
-            const socket = new WebSocket('ws://127.0.0.1:8000/ws/detect/blink');
+            const socket = new WebSocket(buildWebSocketUrl('/ws/detect/blink'));
             socket.onopen = () => console.log('WS Camera Connected');
             socket.onmessage = (event) => {
                 const data = JSON.parse(event.data);

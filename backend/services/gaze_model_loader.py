@@ -130,7 +130,7 @@ class GazeModelLoader:
     _device: Optional[torch.device] = None
     
     # URL de descarga del modelo
-    MODEL_URL = "https://github.com/Ahmednull/L2CS-Net/releases/download/v1.0/L2CSNet_gaze360.pkl"
+    MODEL_URL = "https://huggingface.co/spaces/Mickel0822/detecion-atencion-backend/resolve/main/models/L2CSNet_gaze360.pkl"
     
     def __new__(cls):
         if cls._instance is None:

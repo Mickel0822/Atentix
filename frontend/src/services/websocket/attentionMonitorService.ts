@@ -6,9 +6,9 @@
  */
 
 import type { AttentionResponse } from "@/types/detection";
+import { buildWebSocketUrl } from "./config/config";
 
 // Configuración del WebSocket
-const WS_BASE_URL = process.env.NEXT_PUBLIC_WS_BASE_URL || "ws://localhost:8000";
 const WS_ENDPOINT = "/ws/monitor";
 const RECONNECT_DELAY = 2000; // ms
 const MAX_RECONNECT_ATTEMPTS = 5;
@@ -48,14 +48,7 @@ export class AttentionMonitorService {
         this.config.onStatusChange("connecting");
 
         try {
-            let baseUrl = WS_BASE_URL;
-
-            // Si estamos en HTTPS (producción/Vercel) y la URL es ws://, convertir a wss://
-            if (typeof window !== "undefined" && window.location.protocol === "https:" && baseUrl.startsWith("ws://")) {
-                baseUrl = baseUrl.replace("ws://", "wss://");
-            }
-
-            const url = `${baseUrl}${WS_ENDPOINT}`;
+            const url = buildWebSocketUrl(WS_ENDPOINT);
             console.log(`[AttentionMonitorService] Conectando a ${url}...`);
 
             // US-09: Crear instancia de conexión WebSocket al endpoint del backend

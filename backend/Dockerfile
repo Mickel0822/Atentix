@@ -14,7 +14,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 # Instalar dependencias del sistema mínimas
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
-    libgl1-mesa-glx \
+    libgl1 \
     libglib2.0-0 \
     libsm6 \
     libxext6 \
@@ -40,6 +40,9 @@ COPY . .
 
 # Crear directorio para uploads temporales
 RUN mkdir -p temp_uploads models
+
+# Validar o recuperar los modelos antes de publicar la imagen.
+RUN python services/model_downloader.py
 
 # Puerto (Render pasa $PORT como variable de entorno)
 EXPOSE 10000

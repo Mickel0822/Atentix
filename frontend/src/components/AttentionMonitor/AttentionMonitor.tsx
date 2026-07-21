@@ -53,13 +53,6 @@ export function AttentionMonitor({
     const lastMetricsTimeRef = useRef<number>(0);
     const lastMetricsScoreRef = useRef<number>(0);
 
-    // Callback estable para alertas
-    const handleAlert = React.useCallback(() => {
-        if (navigator.vibrate) {
-            navigator.vibrate([200, 100, 200]);
-        }
-    }, []);
-
     // Hook de monitoreo de atención
     // US-10: Conectar la cámara con el ciclo de envío y recepción del monitoreo WebSocket.
     const {
@@ -70,10 +63,8 @@ export function AttentionMonitor({
         gaze,
         pose,
         isBlinking,
-        warnings,
         blinksPerMinute,
         faceDetected,
-        alertActive,
         isCalibrated,
         isCalibrating,
         startCalibration,
@@ -85,8 +76,7 @@ export function AttentionMonitor({
     } = useAttentionMonitor({
         videoRef,
         canvasRef,
-        enabled: cameraReady,
-        onAlert: handleAlert
+        enabled: cameraReady
     });
 
     // Mantener refs estables evita re-suscribir el efecto de métricas en cada render.
@@ -234,17 +224,6 @@ export function AttentionMonitor({
                     </div>
                 )}
 
-                {/* Alerta de foco */}
-                {alertActive && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-red-900/80 animate-pulse">
-                        <div className="text-center p-6">
-                            <div className="text-6xl mb-4">⚠️</div>
-                            <p className="text-2xl font-bold text-white">¡Atención!</p>
-                            <p className="text-red-200 mt-2">Tu nivel de atención ha bajado</p>
-                        </div>
-                    </div>
-                )}
-
                 {/* Indicador de estado de conexión */}
                 <div className="absolute top-3 right-3 flex items-center gap-2">
                     <div className={`w-3 h-3 rounded-full ${isConnected ? "bg-green-500" :
@@ -284,17 +263,6 @@ export function AttentionMonitor({
                     </span>
                 </div>
 
-                {/* Advertencias */}
-                {warnings.length > 0 && (
-                    <div className="mt-3 p-2 bg-yellow-900/30 rounded border border-yellow-600/50">
-                        <p className="text-xs text-yellow-400 font-medium mb-1">Advertencias:</p>
-                        <ul className="text-xs text-yellow-300 space-y-1">
-                            {warnings.map((w, i) => (
-                                <li key={i}>• {w}</li>
-                            ))}
-                        </ul>
-                    </div>
-                )}
             </div>
 
             {/* Calibración removida para simplificar UI de estudiante */}

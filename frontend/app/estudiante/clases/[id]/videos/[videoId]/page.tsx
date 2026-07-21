@@ -25,24 +25,16 @@ export default function VerVideoPage() {
 
   const [videoData, setVideoData] = useState<VideoData | null>(null);
 
-  // Estados de Atención
-  const [attentionLevel, setAttentionLevel] = useState<"Alto" | "Medio" | "Bajo">("Alto");
-  const [attentionScore, setAttentionScore] = useState(1.0);
   const [accumulatedAttention, setAccumulatedAttention] = useState<number[]>([]);
-  const [showAttentionAlert, setShowAttentionAlert] = useState(false);
-  const [attentionMessage, setAttentionMessage] = useState("¡Mantén tu atención en el video!");
-  const [faceDetected, setFaceDetected] = useState(true);
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [pausedTime, setPausedTime] = useState(0);
   const [currentPauseElapsed, setCurrentPauseElapsed] = useState(0);
-  const [videoDuration, setVideoDuration] = useState(0);
   const [isGeneratingQuiz, setIsGeneratingQuiz] = useState(false);
   const [videoFinished, setVideoFinished] = useState(false);
 
   const pauseStartTimeRef = useRef<number | null>(null);
   const pausedTimeIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const lowAttentionTimerRef = useRef<NodeJS.Timeout | null>(null);
   // Ref estable para isPlaying (evita recrear handleMetricsUpdate en cada render)
   const isPlayingRef = useRef(false);
   isPlayingRef.current = isPlaying;
@@ -111,62 +103,13 @@ export default function VerVideoPage() {
     }
   };
 
-  // --- CALLBACK DE MONITOR DE ATENCIÓN (estable con useCallback) ---
+  // El monitoreo continúa registrando métricas sin alterar la reproducción.
   const handleMetricsUpdate = useCallback((metrics: AttentionMetrics) => {
-    // 1. Detección de rostro
-    setFaceDetected(metrics.faceDetected);
-
-    // Si no hay rostro, actualizar UI y salir
-    if (!metrics.faceDetected) {
-      setAttentionLevel("Bajo");
-      setAttentionMessage("Persona ausente - Vuelve a la cámara ⚠️");
-      setAttentionScore(0.0);
-      setShowAttentionAlert(true);
-
-      // Acumular 0.0 si está reproduciendo (usa ref, no estado)
-      if (isPlayingRef.current) {
-        setAccumulatedAttention(prev => [...prev, 0.0]);
-      }
-      return;
-    }
-
-    // 2. Actualizar Score
-    setAttentionScore(metrics.score);
-
-    // 3. Determinar Nivel y Mensaje
-    let newLevel: "Alto" | "Medio" | "Bajo";
-    let newMessage: string;
-
-    if (metrics.score > 0.7) {
-      newLevel = "Alto";
-      newMessage = "¡Excelente! Mantén tu enfoque 👁️";
-      setShowAttentionAlert(false);
-      if (lowAttentionTimerRef.current) {
-        clearTimeout(lowAttentionTimerRef.current);
-        lowAttentionTimerRef.current = null;
-      }
-    } else if (metrics.score > 0.4) {
-      newLevel = "Medio";
-      newMessage = "Tu atención está bajando... 👀";
-      if (!lowAttentionTimerRef.current) {
-        lowAttentionTimerRef.current = setTimeout(() => {
-          setShowAttentionAlert(true);
-        }, 2000);
-      }
-    } else {
-      newLevel = "Bajo";
-      newMessage = "¡Atención! Vuelve a enfocarte en el video ⚠️";
-      setShowAttentionAlert(true);
-    }
-
-    setAttentionLevel(newLevel);
-    setAttentionMessage(newMessage);
-
-    // 4. Acumular atención (usa ref, no estado)
     if (isPlayingRef.current) {
-      setAccumulatedAttention(prev => [...prev, metrics.score]);
+      const score = metrics.faceDetected ? metrics.score : 0;
+      setAccumulatedAttention(prev => [...prev, score]);
     }
-  }, []); // Deps vacías: función estable, usa refs para valores dinámicos
+  }, []);
 
   // Handlers de Video Player
   const handlePlayStart = () => {
@@ -264,7 +207,6 @@ export default function VerVideoPage() {
   useEffect(() => {
     return () => {
       if (pausedTimeIntervalRef.current) clearInterval(pausedTimeIntervalRef.current);
-      if (lowAttentionTimerRef.current) clearTimeout(lowAttentionTimerRef.current);
     };
   }, []);
 
@@ -302,14 +244,9 @@ export default function VerVideoPage() {
         {/* Video Player */}
         <VideoPlayer
           videoUrl={videoData.videoUrl}
-          attentionLevel={attentionLevel}
-          faceDetected={faceDetected}
-          attentionMessage={attentionMessage}
-          showAttentionAlert={showAttentionAlert}
           onFinish={handleFinish}
           onPlayStart={handlePlayStart}
           onPlayingChange={handlePlayingChange}
-          onDurationChange={setVideoDuration}
         />
 
         {/* Sidebar */}
